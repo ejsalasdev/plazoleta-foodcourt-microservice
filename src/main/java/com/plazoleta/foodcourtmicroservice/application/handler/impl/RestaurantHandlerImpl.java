@@ -8,7 +8,6 @@ import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveRestauran
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveRestaurantResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.RestaurantHandler;
 import com.plazoleta.foodcourtmicroservice.application.mappers.RestaurantRequestMapper;
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 
 import lombok.RequiredArgsConstructor;
@@ -22,8 +21,7 @@ public class RestaurantHandlerImpl implements RestaurantHandler {
 
     @Override
     public SaveRestaurantResponse save(SaveRestaurantRequest request) {
-        RestaurantModel restaurantModel = restaurantRequestMapper.requestToModel(request);
-        restaurantServicePort.save(restaurantModel);
+        restaurantServicePort.save(restaurantRequestMapper.requestToModel(request));
         return new SaveRestaurantResponse("Restaurant saved successfully", LocalDateTime.now());
     }
 

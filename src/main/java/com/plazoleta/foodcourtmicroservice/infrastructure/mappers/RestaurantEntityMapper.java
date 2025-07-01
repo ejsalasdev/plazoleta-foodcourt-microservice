@@ -9,7 +9,6 @@ import com.plazoleta.foodcourtmicroservice.infrastructure.entities.RestaurantEnt
 public interface RestaurantEntityMapper {
 
     RestaurantEntity modelToEntity(RestaurantModel restaurantModel);
-
     RestaurantModel entityToModel(RestaurantEntity restaurantEntity);
 
 }

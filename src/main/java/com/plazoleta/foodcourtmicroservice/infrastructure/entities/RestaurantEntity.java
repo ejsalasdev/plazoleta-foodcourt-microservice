@@ -32,6 +32,6 @@ public class RestaurantEntity {
     @Column(nullable = false, length = 255)
     private String urlLogo;
 
-    @Column(nullable = false)
+    @Column
     private Long ownerId;
 }
