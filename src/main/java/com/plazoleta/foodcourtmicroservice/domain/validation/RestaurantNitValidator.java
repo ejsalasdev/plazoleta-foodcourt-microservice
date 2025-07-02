@@ -3,16 +3,17 @@ package com.plazoleta.foodcourtmicroservice.domain.validation;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
+import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 
 public class RestaurantNitValidator extends AbstractValidator<RestaurantModel> {
     @Override
     protected void validateCurrent(RestaurantModel model) {
         String nit = model.getNit();
         if (nit == null || nit.trim().isEmpty()) {
-            throw new InvalidElementFormatException("El NIT es obligatorio.");
+            throw new InvalidElementFormatException(DomainMessagesConstants.NIT_REQUIRED);
         }
-        if (!nit.matches("\\d+")) {
-            throw new InvalidElementFormatException("El NIT debe ser numérico.");
+        if (!nit.matches(DomainMessagesConstants.NIT_NUMERIC_REGEX)) {
+            throw new InvalidElementFormatException(DomainMessagesConstants.NIT_NUMERIC);
         }
     }
 }

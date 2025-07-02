@@ -2,6 +2,7 @@ package com.plazoleta.foodcourtmicroservice.domain.validation;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
+import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 
 public class RestaurantRequiredFieldsValidator extends AbstractValidator<RestaurantModel> {
     @Override
@@ -11,7 +12,7 @@ public class RestaurantRequiredFieldsValidator extends AbstractValidator<Restaur
                 model.getAddress() == null || model.getAddress().trim().isEmpty() ||
                 model.getPhoneNumber() == null || model.getPhoneNumber().trim().isEmpty() ||
                 model.getUrlLogo() == null || model.getUrlLogo().trim().isEmpty()) {
-            throw new RequiredFieldsException("Todos los campos obligatorios deben estar presentes.");
+            throw new RequiredFieldsException(DomainMessagesConstants.REQUIRED_FIELDS);
         }
     }
 }
