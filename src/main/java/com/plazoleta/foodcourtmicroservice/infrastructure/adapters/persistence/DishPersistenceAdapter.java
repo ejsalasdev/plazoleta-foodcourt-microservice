@@ -6,6 +6,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.DishEntityMapper;
 import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.DishRepository;
+import com.plazoleta.foodcourtmicroservice.infrastructure.specifications.DishSpecifications;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +24,7 @@ public class DishPersistenceAdapter implements DishPersistencePort {
 
     @Override
     public boolean existsByNameAndRestaurantId(String name, Long restaurantId) {
-        return dishRepository.existsByNameAndRestaurantId(name, restaurantId);
+        return dishRepository.count(
+                DishSpecifications.nameEqualsIgnoreCaseAndRestaurantId(name, restaurantId)) > 0;
     }
 }
