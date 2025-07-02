@@ -4,16 +4,18 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 
+
 import com.plazoleta.foodcourtmicroservice.domain.validation.RestaurantValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 
 public class RestaurantUseCase implements RestaurantServicePort {
 
     private final RestaurantPersistencePort restaurantPersistencePort;
     private final RestaurantValidatorChain restaurantValidatorChain;
 
-    public RestaurantUseCase(RestaurantPersistencePort restaurantPersistencePort) {
+    public RestaurantUseCase(RestaurantPersistencePort restaurantPersistencePort, RestaurantValidatorChain restaurantValidatorChain) {
         this.restaurantPersistencePort = restaurantPersistencePort;
-        this.restaurantValidatorChain = new RestaurantValidatorChain();
+        this.restaurantValidatorChain = restaurantValidatorChain;
     }
 
     @Override
@@ -23,7 +25,7 @@ public class RestaurantUseCase implements RestaurantServicePort {
 
         boolean exists = restaurantPersistencePort.existsByNit(restaurantModel.getNit());
         if (exists) {
-            throw new IllegalArgumentException("Restaurant with NIT " + restaurantModel.getNit() + " already exists.");
+            throw new ElementAlreadyExistsException("Restaurant with NIT " + restaurantModel.getNit() + " already exists.");
         }
 
         restaurantPersistencePort.save(restaurantModel);
