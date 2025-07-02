@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.RestaurantUseCase;
-import com.plazoleta.foodcourtmicroservice.domain.validation.RestaurantValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence.RestaurantPersistenceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.RestaurantEntityMapper;
 import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.RestaurantRepository;
