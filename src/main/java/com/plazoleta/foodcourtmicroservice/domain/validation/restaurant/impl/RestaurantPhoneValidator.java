@@ -1,10 +1,11 @@
-package com.plazoleta.foodcourtmicroservice.domain.validation;
+package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl;
 
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.validation.AbstractValidator;
 
 public class RestaurantPhoneValidator extends AbstractValidator<RestaurantModel> {
     @Override

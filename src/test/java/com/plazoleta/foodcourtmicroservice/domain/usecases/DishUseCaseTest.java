@@ -9,67 +9,65 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
-
-class RestaurantUseCaseTest {
+class DishUseCaseTest {
 
     @Mock
-    private RestaurantPersistencePort persistencePort;
+    private DishPersistencePort persistencePort;
 
     @Mock
-    private RestaurantValidatorChain validatorChain;
+    private DishValidatorChain validatorChain;
 
     @InjectMocks
-    private RestaurantUseCase useCase;
+    private DishUseCase useCase;
 
-    private RestaurantModel model;
+    private DishModel model;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        model = new RestaurantModel(1L, "Pizza Place", "123456789", "Street 1", "+573001234567", "logo.png", 10L);
+        model = new DishModel(1L, "Hamburguesa", new java.math.BigDecimal("15000.00"), "Clásica hamburguesa", "https://img.com/hamburguesa.jpg", 2L, 10L, true);
     }
 
     @Test
-    void when_save_withValidRestaurant_then_restaurantIsSaved() {
+    void when_save_withValidDish_then_dishIsSaved() {
         // Arrange
-        when(persistencePort.existsByNit(model.getNit())).thenReturn(false);
+        when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurantId())).thenReturn(false);
 
         // Act
         useCase.save(model);
 
         // Assert
         verify(validatorChain, times(1)).validate(model);
-        verify(persistencePort, times(1)).existsByNit(model.getNit());
+        verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurantId());
         verify(persistencePort, times(1)).save(model);
     }
 
     @Test
-    void when_save_withExistingNit_then_throwElementAlreadyExistsException() {
+    void when_save_withExistingDishName_then_throwElementAlreadyExistsException() {
         // Arrange
-        when(persistencePort.existsByNit(model.getNit())).thenReturn(true);
+        when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurantId())).thenReturn(true);
 
         // Act & Assert
         ElementAlreadyExistsException ex = assertThrows(ElementAlreadyExistsException.class, () -> useCase.save(model));
-        assertEquals(String.format(DomainMessagesConstants.RESTAURANT_NIT_ALREADY_EXISTS, model.getNit()),
-                ex.getMessage());
+        assertEquals(String.format(DomainMessagesConstants.DISH_ALREADY_EXISTS, model.getName()), ex.getMessage());
         verify(validatorChain, times(1)).validate(model);
-        verify(persistencePort, times(1)).existsByNit(model.getNit());
+        verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurantId());
         verify(persistencePort, never()).save(any());
     }
 
     @Test
-    void when_save_withInvalidRestaurant_then_throwValidationException() {
+    void when_save_withInvalidDish_then_throwValidationException() {
         // Arrange
         doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model);
 
@@ -77,7 +75,7 @@ class RestaurantUseCaseTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> useCase.save(model));
         assertEquals("Validation error", ex.getMessage());
         verify(validatorChain, times(1)).validate(model);
-        verify(persistencePort, never()).existsByNit(any());
+        verify(persistencePort, never()).existsByNameAndRestaurantId(any(), any());
         verify(persistencePort, never()).save(any());
     }
 }
