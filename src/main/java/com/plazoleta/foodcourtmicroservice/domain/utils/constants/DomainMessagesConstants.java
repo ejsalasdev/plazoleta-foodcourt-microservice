@@ -30,6 +30,7 @@ public final class DomainMessagesConstants {
     public static final String DISH_CATEGORY_ID_REQUIRED = "Category ID is required.";
     public static final String DISH_RESTAURANT_ID_REQUIRED = "Restaurant ID is required.";
 
+    public static final String DISH_ALREADY_EXISTS = "A dish with the same name '%s' already exists in this restaurant.";
     public static final String DISH_IMAGE_URL_INVALID = "Dish image URL is invalid.";
     public static final String URL_IMAGE_REGEX = "^(https?://).+\\.(jpg|jpeg|png|gif|bmp)$";
 
