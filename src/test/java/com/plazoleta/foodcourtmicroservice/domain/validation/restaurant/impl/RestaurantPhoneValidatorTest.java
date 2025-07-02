@@ -1,16 +1,17 @@
-package com.plazoleta.foodcourtmicroservice.domain.validation;
+package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantPhoneValidator;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
+import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
 class RestaurantPhoneValidatorTest {
     private final RestaurantPhoneValidator validator = new RestaurantPhoneValidator();

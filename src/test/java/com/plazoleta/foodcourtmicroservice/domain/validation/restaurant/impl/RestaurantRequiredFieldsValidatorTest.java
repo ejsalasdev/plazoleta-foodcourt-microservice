@@ -1,12 +1,12 @@
-package com.plazoleta.foodcourtmicroservice.domain.validation;
+package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantRequiredFieldsValidator;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
+import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
 class RestaurantRequiredFieldsValidatorTest {
     private final RestaurantRequiredFieldsValidator validator = new RestaurantRequiredFieldsValidator();
