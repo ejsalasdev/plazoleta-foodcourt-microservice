@@ -5,6 +5,7 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsExcep
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 
 public class RestaurantRequiredFieldsValidator extends AbstractValidator<RestaurantModel> {
+    
     @Override
     protected void validateCurrent(RestaurantModel model) {
         if (model.getName() == null || model.getName().trim().isEmpty() ||
