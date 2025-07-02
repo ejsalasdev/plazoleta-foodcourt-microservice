@@ -2,6 +2,10 @@ package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.validation.Validator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantNameValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantNitValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantPhoneValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantRequiredFieldsValidator;
 
 public class RestaurantValidatorChain {
     private final Validator<RestaurantModel> chain;

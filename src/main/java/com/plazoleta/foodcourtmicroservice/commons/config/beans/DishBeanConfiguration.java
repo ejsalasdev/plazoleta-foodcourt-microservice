@@ -27,7 +27,7 @@ public class DishBeanConfiguration {
 
     @Bean
     public DishValidatorChain dishValidatorChain() {
-        return new com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain();
+        return new DishValidatorChain();
     }
 
     @Bean

@@ -2,7 +2,7 @@ package com.plazoleta.foodcourtmicroservice.domain.validation;
 
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantNameValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantNameValidator;
 
 import org.junit.jupiter.api.Test;
 

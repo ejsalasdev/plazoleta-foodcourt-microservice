@@ -2,7 +2,7 @@ package com.plazoleta.foodcourtmicroservice.domain.validation;
 
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantRequiredFieldsValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantRequiredFieldsValidator;
 
 import org.junit.jupiter.api.Test;
 

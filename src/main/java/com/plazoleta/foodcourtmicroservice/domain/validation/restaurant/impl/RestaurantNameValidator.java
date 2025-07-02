@@ -1,4 +1,4 @@
-package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant;
+package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl;
 
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;

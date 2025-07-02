@@ -3,7 +3,7 @@ package com.plazoleta.foodcourtmicroservice.domain.validation;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantPhoneValidator;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantPhoneValidator;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
