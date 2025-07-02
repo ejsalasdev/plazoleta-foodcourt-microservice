@@ -12,9 +12,10 @@ public class DishUseCase implements DishServicePort {
     private final DishPersistencePort dishPersistencePort;
     private final DishValidatorChain dishValidatorChain;
 
-    public DishUseCase(DishPersistencePort dishPersistencePort) {
+    public DishUseCase(DishPersistencePort dishPersistencePort,
+            DishValidatorChain dishValidatorChain) {
         this.dishPersistencePort = dishPersistencePort;
-        this.dishValidatorChain = new DishValidatorChain();
+        this.dishValidatorChain = dishValidatorChain;
     }
 
     @Override

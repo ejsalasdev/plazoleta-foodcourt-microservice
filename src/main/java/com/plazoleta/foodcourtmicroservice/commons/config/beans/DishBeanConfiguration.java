@@ -34,6 +34,6 @@ public class DishBeanConfiguration {
     public DishServicePort dishServicePort(
             DishPersistencePort dishPersistencePort,
             DishValidatorChain dishValidatorChain) {
-        return new DishUseCase(dishPersistencePort);
+        return new DishUseCase(dishPersistencePort, dishValidatorChain);
     }
 }
