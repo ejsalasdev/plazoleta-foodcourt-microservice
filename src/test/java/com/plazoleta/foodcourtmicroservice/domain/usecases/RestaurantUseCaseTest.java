@@ -19,7 +19,7 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExist
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
-import com.plazoleta.foodcourtmicroservice.domain.validation.RestaurantValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 
 class RestaurantUseCaseTest {
 

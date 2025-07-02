@@ -1,8 +1,9 @@
-package com.plazoleta.foodcourtmicroservice.domain.validation;
+package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.validation.AbstractValidator;
 
 public class RestaurantRequiredFieldsValidator extends AbstractValidator<RestaurantModel> {
     

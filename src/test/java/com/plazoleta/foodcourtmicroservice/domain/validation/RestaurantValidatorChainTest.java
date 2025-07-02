@@ -1,6 +1,8 @@
 package com.plazoleta.foodcourtmicroservice.domain.validation;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
+import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

@@ -1,4 +1,3 @@
-
 package com.plazoleta.foodcourtmicroservice.infrastructure.entities;
 
 import jakarta.persistence.*;
