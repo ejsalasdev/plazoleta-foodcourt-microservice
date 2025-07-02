@@ -1,4 +1,4 @@
-package com.plazoleta.foodcourt_microservice;
+package com.plazoleta.foodcourtmicroservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
