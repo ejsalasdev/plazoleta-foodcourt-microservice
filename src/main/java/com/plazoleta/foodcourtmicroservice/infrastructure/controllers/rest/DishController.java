@@ -1,7 +1,5 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.controllers.rest;
 
-// ...existing code...
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,7 +14,6 @@ import com.plazoleta.foodcourtmicroservice.application.dto.request.UpdateDishReq
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.UpdateDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.DishHandler;
-// ...existing code...
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,8 +44,17 @@ public class DishController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(dishHandler.save(request));
         }
 
+        @Operation(summary = "Update a dish", description = "Updates the price and/or description of a dish for a given restaurant.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Dish updated successfully", content = @Content(schema = @Schema(implementation = UpdateDishResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+        })
         @PatchMapping("/{dishId}")
-        public ResponseEntity<UpdateDishResponse> update(@PathVariable Long dishId, @RequestBody UpdateDishRequest request) {
+        public ResponseEntity<UpdateDishResponse> update(
+                        @PathVariable @Schema(description = "ID of the dish to update", example = "1") Long dishId,
+                        @RequestBody UpdateDishRequest request) {
                 return ResponseEntity.status(HttpStatus.OK).body(dishHandler.update(dishId, request));
         }
 }
