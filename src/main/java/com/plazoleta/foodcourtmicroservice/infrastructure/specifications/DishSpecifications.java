@@ -12,7 +12,7 @@ public class DishSpecifications {
     public static Specification<DishEntity> nameEqualsIgnoreCaseAndRestaurantId(String name, Long restaurantId) {
         return (root, query, cb) -> cb.and(
             cb.equal(cb.lower(root.get("name")), name.toLowerCase()),
-            cb.equal(root.get("restaurantId"), restaurantId)
+            cb.equal(root.get("restaurant").get("id"), restaurantId)
         );
     }
 }
