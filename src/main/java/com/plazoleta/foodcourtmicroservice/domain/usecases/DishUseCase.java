@@ -1,5 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.domain.usecases;
 
+import java.math.BigDecimal;
+
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
@@ -29,5 +31,10 @@ public class DishUseCase implements DishServicePort {
         }
 
         dishPersistencePort.save(dishModel);
+    }
+
+    @Override
+    public void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description) {
+        dishPersistencePort.updateDish(dishId, restaurantId, price, description);
     }
 }

@@ -1,6 +1,8 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
 
+import java.math.BigDecimal;
+
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.DishEntityMapper;
@@ -24,5 +26,14 @@ public class DishPersistenceAdapter implements DishPersistencePort {
     public boolean existsByNameAndRestaurantId(String name, Long restaurantId) {
         return dishRepository.count(
                 DishSpecifications.nameEqualsIgnoreCaseAndRestaurantId(name, restaurantId)) > 0;
+    }
+
+    @Override
+    public void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description) {
+        dishRepository.findById(dishId).ifPresent(dish -> {
+            dish.setPrice(price);
+            dish.setDescription(description);
+            dishRepository.save(dish);
+        });
     }
 }
