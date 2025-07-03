@@ -31,6 +31,7 @@ public final class DomainMessagesConstants {
     public static final String DISH_RESTAURANT_ID_REQUIRED = "Restaurant ID is required.";
 
     public static final String DISH_ALREADY_EXISTS = "A dish with the same name '%s' already exists in this restaurant.";
+    public static final String DISH_NOT_FOUND_IN_RESTAURANT = "Dish with id %d does not belong to restaurant with id %d or does not exist.";
     public static final String DISH_IMAGE_URL_INVALID = "Dish image URL is invalid.";
     public static final String URL_IMAGE_REGEX = "^(https?://).+\\.(jpg|jpeg|png|gif|bmp)$";
 

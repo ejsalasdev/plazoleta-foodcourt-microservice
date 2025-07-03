@@ -11,4 +11,7 @@ public interface DishPersistencePort {
     boolean existsByNameAndRestaurantId(String name, Long restaurantId);
 
     void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description);
+
+    boolean existsByIdAndRestaurantId(Long dishId, Long restaurantId);
+
 }

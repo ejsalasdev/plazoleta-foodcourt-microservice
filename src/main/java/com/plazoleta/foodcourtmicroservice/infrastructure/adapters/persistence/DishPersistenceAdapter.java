@@ -1,6 +1,5 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
-
 import java.math.BigDecimal;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
@@ -35,5 +34,12 @@ public class DishPersistenceAdapter implements DishPersistencePort {
             dish.setDescription(description);
             dishRepository.save(dish);
         });
+    }
+
+    @Override
+    public boolean existsByIdAndRestaurantId(Long dishId, Long restaurantId) {
+        return dishRepository.count(
+            DishSpecifications.idEqualsAndRestaurantId(dishId, restaurantId)
+        ) > 0;
     }
 }
