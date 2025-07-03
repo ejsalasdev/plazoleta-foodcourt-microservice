@@ -1,7 +1,5 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
-import org.springframework.stereotype.Repository;
-
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.RestaurantEntityMapper;
@@ -9,7 +7,6 @@ import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.
 
 import lombok.RequiredArgsConstructor;
 
-@Repository
 @RequiredArgsConstructor
 public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
 
