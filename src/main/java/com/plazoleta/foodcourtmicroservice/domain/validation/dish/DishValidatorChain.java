@@ -6,6 +6,8 @@ import com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl.DishNameV
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl.DishPriceValidator;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl.DishRequiredFieldsValidator;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+
 public class DishValidatorChain {
     private final Validator<DishModel> chain;
 
@@ -20,7 +22,7 @@ public class DishValidatorChain {
         this.chain = required;
     }
 
-    public void validate(DishModel model) {
-        chain.validate(model);
+    public void validate(DishModel model, OperationType operationType) {
+        chain.validate(model, operationType);
     }
 }

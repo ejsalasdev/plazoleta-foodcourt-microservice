@@ -1,11 +1,13 @@
 package com.plazoleta.foodcourtmicroservice.domain.validation.restaurant;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
+
 import com.plazoleta.foodcourtmicroservice.domain.validation.Validator;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantNameValidator;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantNitValidator;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantPhoneValidator;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.impl.RestaurantRequiredFieldsValidator;
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 
 public class RestaurantValidatorChain {
     private final Validator<RestaurantModel> chain;
@@ -23,7 +25,7 @@ public class RestaurantValidatorChain {
         this.chain = required;
     }
 
-    public void validate(RestaurantModel model) {
-        chain.validate(model);
+    public void validate(RestaurantModel model, OperationType operationType) {
+        chain.validate(model, operationType);
     }
 }

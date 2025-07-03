@@ -10,6 +10,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 
 public class DishUseCase implements DishServicePort {
 
@@ -24,7 +25,7 @@ public class DishUseCase implements DishServicePort {
 
     @Override
     public void save(DishModel dishModel) {
-        dishValidatorChain.validate(dishModel);
+        dishValidatorChain.validate(dishModel, OperationType.CREATE);
 
         Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
         if (dishPersistencePort.existsByNameAndRestaurantId(dishModel.getName(), restaurantId)) {
@@ -50,7 +51,7 @@ public class DishUseCase implements DishServicePort {
         restaurant.setId(restaurantId);
         dishModel.setRestaurant(restaurant);
 
-        dishValidatorChain.validate(dishModel);
+        dishValidatorChain.validate(dishModel, OperationType.UPDATE);
 
         dishPersistencePort.updateDish(dishId, restaurantId, price, description);
     }
