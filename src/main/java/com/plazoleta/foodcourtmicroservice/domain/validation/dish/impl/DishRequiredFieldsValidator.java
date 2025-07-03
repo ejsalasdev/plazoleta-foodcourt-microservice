@@ -14,7 +14,7 @@ public class DishRequiredFieldsValidator extends AbstractValidator<DishModel> {
         if (dish.getDescription() == null || dish.getDescription().trim().isEmpty()) {
             throw new RequiredFieldsException(DomainMessagesConstants.DISH_DESCRIPTION_REQUIRED);
         }
-        if (dish.getRestaurantId() == null) {
+        if (dish.getRestaurant() == null || dish.getRestaurant().getId() == null) {
             throw new RequiredFieldsException(DomainMessagesConstants.DISH_RESTAURANT_ID_REQUIRED);
         }
         if (dish.getCategoryId() == null) {

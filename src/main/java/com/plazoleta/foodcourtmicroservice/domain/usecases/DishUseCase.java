@@ -22,7 +22,8 @@ public class DishUseCase implements DishServicePort {
     public void save(DishModel dishModel) {
         dishValidatorChain.validate(dishModel);
 
-        if (dishPersistencePort.existsByNameAndRestaurantId(dishModel.getName(), dishModel.getRestaurantId())) {
+        Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
+        if (dishPersistencePort.existsByNameAndRestaurantId(dishModel.getName(), restaurantId)) {
             throw new ElementAlreadyExistsException(
                     String.format(DomainMessagesConstants.DISH_ALREADY_EXISTS, dishModel.getName()));
         }

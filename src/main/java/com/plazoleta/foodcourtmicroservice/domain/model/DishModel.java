@@ -10,7 +10,7 @@ public class DishModel {
     private String description;
     private String urlImage;
     private Long categoryId;
-    private Long restaurantId;
+    private RestaurantModel restaurant;
     private Boolean active;
 
     public DishModel() {
@@ -18,14 +18,14 @@ public class DishModel {
     }
 
     public DishModel(Long id, String name, BigDecimal price, String description, String urlImage, Long categoryId,
-            Long restaurantId, Boolean active) {
+            RestaurantModel restaurant, Boolean active) {
         this.id = id;
         this.name = name;
         this.price = price;
         this.description = description;
         this.urlImage = urlImage;
         this.categoryId = categoryId;
-        this.restaurantId = restaurantId;
+        this.restaurant = restaurant;
         this.active = active;
     }
 
@@ -77,12 +77,12 @@ public class DishModel {
         this.categoryId = categoryId;
     }
 
-    public Long getRestaurantId() {
-        return restaurantId;
+    public RestaurantModel getRestaurant() {
+        return restaurant;
     }
 
-    public void setRestaurantId(Long restaurantId) {
-        this.restaurantId = restaurantId;
+    public void setRestaurant(RestaurantModel restaurant) {
+        this.restaurant = restaurant;
     }
 
     public Boolean getActive() {
@@ -117,7 +117,7 @@ public class DishModel {
                 ", description='" + description + '\'' +
                 ", urlImage='" + urlImage + '\'' +
                 ", categoryId=" + categoryId +
-                ", restaurantId=" + restaurantId +
+                ", restaurant=" + restaurant +
                 ", active=" + active +
                 '}';
     }

@@ -29,11 +29,13 @@ public class DishEntity {
     @Column(nullable = false, length = 255)
     private String urlImage;
 
+
     @Column(nullable = true, length = 30)
     private Long categoryId;
 
-    @Column(nullable = true)
-    private Long restaurantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id")
+    private RestaurantEntity restaurant;
 
     @Column(nullable = false)
     private Boolean active = true;

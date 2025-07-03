@@ -1,6 +1,5 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
-import org.springframework.stereotype.Component;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
@@ -10,7 +9,6 @@ import com.plazoleta.foodcourtmicroservice.infrastructure.specifications.DishSpe
 
 import lombok.RequiredArgsConstructor;
 
-@Component
 @RequiredArgsConstructor
 public class DishPersistenceAdapter implements DishPersistencePort {
 
