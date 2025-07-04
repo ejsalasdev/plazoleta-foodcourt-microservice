@@ -1,12 +1,19 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.*;
+import java.time.LocalDateTime;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.time.LocalDateTime;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
+import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeAuthoritiesException;
+import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeIdException;
 
 @ControllerAdvice
 public class ControllerAdvisor {
@@ -41,6 +48,19 @@ public class ControllerAdvisor {
         @ExceptionHandler(ElementNotFoundException.class)
         public ResponseEntity<ExceptionResponse> handleElementNotFoundException(ElementNotFoundException exception) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(ErrorDecodeIdException.class)
+        public ResponseEntity<ExceptionResponse> handleErrorDecodeIdException(ErrorDecodeIdException exception) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(ErrorDecodeAuthoritiesException.class)
+        public ResponseEntity<ExceptionResponse> handleErrorDecodeAuthoritiesException(
+                        ErrorDecodeAuthoritiesException exception) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
         }
 

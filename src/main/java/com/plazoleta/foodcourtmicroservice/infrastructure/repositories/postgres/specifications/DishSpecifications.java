@@ -1,4 +1,4 @@
-package com.plazoleta.foodcourtmicroservice.infrastructure.specifications;
+package com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.specifications;
 
 import com.plazoleta.foodcourtmicroservice.infrastructure.entities.DishEntity;
 import org.springframework.data.jpa.domain.Specification;
