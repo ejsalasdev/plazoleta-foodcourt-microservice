@@ -2,6 +2,8 @@ package com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -23,7 +25,7 @@ class DishPriceValidatorTest {
     void when_validPrice_then_noException() {
         DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
                 true);
-        assertDoesNotThrow(() -> validator.validate(model));
+        assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }
 
     @Test
@@ -32,14 +34,14 @@ class DishPriceValidatorTest {
                 true);
         DishModel negativePrice = new DishModel(1L, "Pizza", new BigDecimal("-1"), "desc", "url", 2L,
                 buildRestaurant(10L), true);
-        assertThrows(InvalidElementFormatException.class, () -> validator.validate(zeroPrice));
-        assertThrows(InvalidElementFormatException.class, () -> validator.validate(negativePrice));
+        assertThrows(InvalidElementFormatException.class, () -> validator.validate(zeroPrice, OperationType.CREATE));
+        assertThrows(InvalidElementFormatException.class, () -> validator.validate(negativePrice, OperationType.CREATE));
     }
 
     @Test
     void when_priceIsNotInteger_then_throwInvalidElementFormatException() {
         DishModel decimalPrice = new DishModel(1L, "Pizza", new BigDecimal("10000.50"), "desc", "url", 2L,
                 buildRestaurant(10L), true);
-        assertThrows(InvalidElementFormatException.class, () -> validator.validate(decimalPrice));
+        assertThrows(InvalidElementFormatException.class, () -> validator.validate(decimalPrice, OperationType.CREATE));
     }
 }

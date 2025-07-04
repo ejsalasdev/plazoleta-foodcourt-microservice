@@ -2,6 +2,8 @@ package com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl;
 
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -22,7 +24,7 @@ class DishNameValidatorTest {
     void when_validName_then_noException() {
         DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
                 true);
-        assertDoesNotThrow(() -> validator.validate(model));
+        assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }
 
     @org.junit.jupiter.params.ParameterizedTest
@@ -30,13 +32,13 @@ class DishNameValidatorTest {
     void when_invalidName_then_throwInvalidElementFormatException(String invalidName) {
         DishModel model = new DishModel(1L, invalidName, new BigDecimal("10000"), "desc", "url", 2L,
                 buildRestaurant(10L), true);
-        assertThrows(InvalidElementFormatException.class, () -> validator.validate(model));
+        assertThrows(InvalidElementFormatException.class, () -> validator.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_nullName_then_noException() {
         DishModel model = new DishModel(1L, null, new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
                 true);
-        assertDoesNotThrow(() -> validator.validate(model));
+        assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }
 }
