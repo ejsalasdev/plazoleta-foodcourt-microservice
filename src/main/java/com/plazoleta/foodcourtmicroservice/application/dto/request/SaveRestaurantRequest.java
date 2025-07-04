@@ -5,9 +5,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(name = "SaveRestaurantRequest", description = "Required data to create a restaurant")
 public record SaveRestaurantRequest(
-                @Schema(description = "Restaurant name", example = "La Pizzería", minLength = 2, maxLength = 50) String name,
+                @Schema(description = "Restaurant name", example = "La Pizzeria", minLength = 2, maxLength = 50) String name,
 
-                @Schema(description = "Restaurant NIT (unique)", example = "123456789-0", minLength = 5, maxLength = 20) String nit,
+                @Schema(description = "Restaurant NIT (unique)", example = "123456789", minLength = 5, maxLength = 20) String nit,
 
                 @Schema(description = "Restaurant address", example = "Calle 123 #45-67", minLength = 5, maxLength = 100) String address,
 

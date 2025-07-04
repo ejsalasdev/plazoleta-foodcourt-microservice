@@ -22,6 +22,6 @@ jwt:
   
   # Uncomment the following lines to enable debug logging
 
-#logging:
-#  level:
-#    root: debug
+logging:
+ level:
+   root: debug
