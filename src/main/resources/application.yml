@@ -15,13 +15,13 @@ spring:
     properties:
       hibernate:
         format_sql: true
-# jwt:
-#   secret: ${JWT_SECRET}
-#   user: ${JWT_USER:AUTH0JWT_BACKEND}
-#   expiration: ${JWT_EXPIRATION:86400000}
+jwt:
+  secret: ${JWT_SECRET}
+  user: ${JWT_USER:AUTH0JWT_BACKEND}
+  expiration: ${JWT_EXPIRATION:86400000}
   
   # Uncomment the following lines to enable debug logging
 
-#logging:
-#  level:
-#    root: debug
+logging:
+ level:
+   root: debug

@@ -34,7 +34,7 @@ public class RestaurantController {
             @ApiResponse(responseCode = "409", description = "Restaurant with given NIT already exists", content = @Content(schema = @Schema(implementation = com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse.class)))
     })
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<SaveRestaurantResponse> save(@RequestBody SaveRestaurantRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(restaurantHandler.save(request));
     }

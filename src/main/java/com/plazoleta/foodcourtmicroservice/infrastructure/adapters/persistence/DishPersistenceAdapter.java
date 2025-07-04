@@ -6,7 +6,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.DishEntityMapper;
 import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.DishRepository;
-import com.plazoleta.foodcourtmicroservice.infrastructure.specifications.DishSpecifications;
+import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.specifications.DishSpecifications;
 
 import lombok.RequiredArgsConstructor;
 
