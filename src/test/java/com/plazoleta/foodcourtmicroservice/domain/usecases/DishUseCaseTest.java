@@ -1,26 +1,29 @@
 package com.plazoleta.foodcourtmicroservice.domain.usecases;
 
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
-import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
-import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
+import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
+import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
 
 class DishUseCaseTest {
 
@@ -56,7 +59,7 @@ class DishUseCaseTest {
         useCase.save(model);
 
         // Assert
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId());
         verify(persistencePort, times(1)).save(model);
     }
@@ -70,7 +73,7 @@ class DishUseCaseTest {
         // Act & Assert
         ElementAlreadyExistsException ex = assertThrows(ElementAlreadyExistsException.class, () -> useCase.save(model));
         assertEquals(String.format(DomainMessagesConstants.DISH_ALREADY_EXISTS, model.getName()), ex.getMessage());
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId());
         verify(persistencePort, never()).save(any());
     }
@@ -78,13 +81,70 @@ class DishUseCaseTest {
     @Test
     void when_save_withInvalidDish_then_throwValidationException() {
         // Arrange
-        doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model);
+        doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model, OperationType.CREATE);
 
         // Act & Assert
         RuntimeException ex = assertThrows(RuntimeException.class, () -> useCase.save(model));
         assertEquals("Validation error", ex.getMessage());
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, never()).existsByNameAndRestaurantId(any(), any());
         verify(persistencePort, never()).save(any());
+    }
+
+    @Test
+    void when_updateDish_withValidData_then_dishIsUpdated() {
+        // Arrange
+        Long dishId = 1L;
+        Long restaurantId = 10L;
+        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        String description = "Nueva descripción";
+        when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(true);
+
+        // Act
+        useCase.updateDish(dishId, restaurantId, price, description);
+
+        // Assert
+        verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
+        verify(validatorChain, times(1)).validate(any(DishModel.class), eq(OperationType.UPDATE));
+        verify(persistencePort, times(1)).updateDish(dishId, restaurantId, price, description);
+    }
+
+    @Test
+    void when_updateDish_dishNotFound_then_throwElementNotFoundException() {
+        // Arrange
+        Long dishId = 1L;
+        Long restaurantId = 10L;
+        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        String description = "Nueva descripción";
+        when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(false);
+
+        // Act & Assert
+        ElementNotFoundException ex = assertThrows(ElementNotFoundException.class, () ->
+            useCase.updateDish(dishId, restaurantId, price, description)
+        );
+        assertEquals(String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId), ex.getMessage());
+        verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
+        verify(validatorChain, never()).validate(any(DishModel.class), any());
+        verify(persistencePort, never()).updateDish(any(), any(), any(), any());
+    }
+
+    @Test
+    void when_updateDish_validationFails_then_throwValidationException() {
+        // Arrange
+        Long dishId = 1L;
+        Long restaurantId = 10L;
+        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        String description = "Nueva descripción";
+        when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(true);
+        doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(any(DishModel.class), eq(OperationType.UPDATE));
+
+        // Act & Assert
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+            useCase.updateDish(dishId, restaurantId, price, description)
+        );
+        assertEquals("Validation error", ex.getMessage());
+        verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
+        verify(validatorChain, times(1)).validate(any(DishModel.class), eq(OperationType.UPDATE));
+        verify(persistencePort, never()).updateDish(any(), any(), any(), any());
     }
 }

@@ -38,6 +38,12 @@ public class ControllerAdvisor {
                                 .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
         }
 
+        @ExceptionHandler(ElementNotFoundException.class)
+        public ResponseEntity<ExceptionResponse> handleElementNotFoundException(ElementNotFoundException exception) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ExceptionResponse> handleGenericException(Exception exception) {
                 String message = "An unexpected error occurred. Please contact support if the problem persists.";

@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
@@ -49,7 +50,7 @@ class RestaurantUseCaseTest {
         useCase.save(model);
 
         // Assert
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNit(model.getNit());
         verify(persistencePort, times(1)).save(model);
     }
@@ -63,7 +64,7 @@ class RestaurantUseCaseTest {
         ElementAlreadyExistsException ex = assertThrows(ElementAlreadyExistsException.class, () -> useCase.save(model));
         assertEquals(String.format(DomainMessagesConstants.RESTAURANT_NIT_ALREADY_EXISTS, model.getNit()),
                 ex.getMessage());
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNit(model.getNit());
         verify(persistencePort, never()).save(any());
     }
@@ -71,12 +72,12 @@ class RestaurantUseCaseTest {
     @Test
     void when_save_withInvalidRestaurant_then_throwValidationException() {
         // Arrange
-        doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model);
+        doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model, OperationType.CREATE);
 
         // Act & Assert
         RuntimeException ex = assertThrows(RuntimeException.class, () -> useCase.save(model));
         assertEquals("Validation error", ex.getMessage());
-        verify(validatorChain, times(1)).validate(model);
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, never()).existsByNit(any());
         verify(persistencePort, never()).save(any());
     }

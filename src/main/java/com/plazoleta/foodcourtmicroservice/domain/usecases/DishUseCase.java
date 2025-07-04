@@ -1,11 +1,16 @@
 package com.plazoleta.foodcourtmicroservice.domain.usecases;
 
+import java.math.BigDecimal;
+
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
+import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 
 public class DishUseCase implements DishServicePort {
 
@@ -20,7 +25,7 @@ public class DishUseCase implements DishServicePort {
 
     @Override
     public void save(DishModel dishModel) {
-        dishValidatorChain.validate(dishModel);
+        dishValidatorChain.validate(dishModel, OperationType.CREATE);
 
         Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
         if (dishPersistencePort.existsByNameAndRestaurantId(dishModel.getName(), restaurantId)) {
@@ -29,5 +34,25 @@ public class DishUseCase implements DishServicePort {
         }
 
         dishPersistencePort.save(dishModel);
+    }
+
+    @Override
+    public void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description) {
+        if (!dishPersistencePort.existsByIdAndRestaurantId(dishId, restaurantId)) {
+            throw new ElementNotFoundException(
+                    String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId));
+        }
+
+        DishModel dishModel = new DishModel();
+        dishModel.setId(dishId);
+        dishModel.setPrice(price);
+        dishModel.setDescription(description);
+        RestaurantModel restaurant = new RestaurantModel();
+        restaurant.setId(restaurantId);
+        dishModel.setRestaurant(restaurant);
+
+        dishValidatorChain.validate(dishModel, OperationType.UPDATE);
+
+        dishPersistencePort.updateDish(dishId, restaurantId, price, description);
     }
 }

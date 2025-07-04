@@ -1,5 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.domain.validation;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+
 public abstract class AbstractValidator<T> implements Validator<T> {
     private Validator<T> next;
 
@@ -9,12 +11,12 @@ public abstract class AbstractValidator<T> implements Validator<T> {
     }
 
     @Override
-    public void validate(T model) {
-        validateCurrent(model);
+    public void validate(T model, OperationType operationType) {
+        validateCurrent(model, operationType);
         if (next != null) {
-            next.validate(model);
+            next.validate(model, operationType);
         }
     }
 
-    protected abstract void validateCurrent(T model);
+    protected abstract void validateCurrent(T model, OperationType operationType);
 }
