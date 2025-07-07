@@ -25,3 +25,6 @@ jwt:
 logging:
  level:
    root: debug
+
+user-microservice:
+  url: http://localhost:8091

@@ -17,8 +17,10 @@ import org.mockito.MockitoAnnotations;
 
 import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 
@@ -30,6 +32,9 @@ class RestaurantUseCaseTest {
     @Mock
     private RestaurantValidatorChain validatorChain;
 
+    @Mock
+    private UserServicePort userServicePort;
+
     @InjectMocks
     private RestaurantUseCase useCase;
 
@@ -39,11 +44,13 @@ class RestaurantUseCaseTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         model = new RestaurantModel(1L, "Pizza Place", "123456789", "Street 1", "+573001234567", "logo.png", 10L);
+        useCase = new RestaurantUseCase(persistencePort, validatorChain, userServicePort);
     }
 
     @Test
     void when_save_withValidRestaurant_then_restaurantIsSaved() {
         // Arrange
+        when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("OWNER");
         when(persistencePort.existsByNit(model.getNit())).thenReturn(false);
 
         // Act
@@ -56,8 +63,36 @@ class RestaurantUseCaseTest {
     }
 
     @Test
+    void when_save_withInvalidOwner_then_throwInvalidOwnerException() {
+        // Arrange
+        doThrow(new InvalidOwnerException("Invalid owner")).when(validatorChain).validate(model, OperationType.CREATE);
+
+        // Act & Assert
+        InvalidOwnerException ex = assertThrows(InvalidOwnerException.class, () -> useCase.save(model));
+        assertEquals("Invalid owner", ex.getMessage());
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
+        verify(persistencePort, never()).existsByNit(any());
+        verify(persistencePort, never()).save(any());
+    }
+
+    @Test
+    void when_save_withNonOwnerRole_then_throwInvalidOwnerException() {
+        // Arrange
+        when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("ADMIN");
+
+        // Act & Assert
+        InvalidOwnerException ex = assertThrows(InvalidOwnerException.class, () -> useCase.save(model));
+        assertEquals(String.format(DomainMessagesConstants.USER_IS_NOT_OWNER, model.getOwnerId()), ex.getMessage());
+        verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
+        verify(userServicePort, times(1)).getUserRoleById(model.getOwnerId());
+        verify(persistencePort, never()).existsByNit(any());
+        verify(persistencePort, never()).save(any());
+    }
+
+    @Test
     void when_save_withExistingNit_then_throwElementAlreadyExistsException() {
         // Arrange
+        when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("OWNER");
         when(persistencePort.existsByNit(model.getNit())).thenReturn(true);
 
         // Act & Assert

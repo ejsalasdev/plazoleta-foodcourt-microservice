@@ -14,7 +14,8 @@ public class RestaurantRequiredFieldsValidator extends AbstractValidator<Restaur
                     model.getNit() == null || model.getNit().trim().isEmpty() ||
                     model.getAddress() == null || model.getAddress().trim().isEmpty() ||
                     model.getPhoneNumber() == null || model.getPhoneNumber().trim().isEmpty() ||
-                    model.getUrlLogo() == null || model.getUrlLogo().trim().isEmpty())) {
+                    model.getUrlLogo() == null || model.getUrlLogo().trim().isEmpty()) ||
+                    model.getOwnerId() == null || model.getOwnerId() <= 0) {
                 throw new RequiredFieldsException(DomainMessagesConstants.REQUIRED_FIELDS);
             }
         

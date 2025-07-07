@@ -11,9 +11,11 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExist
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeAuthoritiesException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeIdException;
+import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.UserNotFoundException;
 
 @ControllerAdvice
 public class ControllerAdvisor {
@@ -61,6 +63,18 @@ public class ControllerAdvisor {
         public ResponseEntity<ExceptionResponse> handleErrorDecodeAuthoritiesException(
                         ErrorDecodeAuthoritiesException exception) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(InvalidOwnerException.class)
+        public ResponseEntity<ExceptionResponse> handleInvalidOwnerException(InvalidOwnerException exception) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(UserNotFoundException.class)
+        public ResponseEntity<ExceptionResponse> handleUserNotFoundException(UserNotFoundException exception) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
                                 .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
         }
 
