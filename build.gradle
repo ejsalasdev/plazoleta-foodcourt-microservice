@@ -1,5 +1,5 @@
-
 plugins {
+    id 'jacoco'
     id 'java'
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
@@ -54,6 +54,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.12.0'
 }
 
-tasks.named('test') {
+jacoco {
+    toolVersion = "0.8.13"
+}
+
+test {
     useJUnitPlatform()
 }
