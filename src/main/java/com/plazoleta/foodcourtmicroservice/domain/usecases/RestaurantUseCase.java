@@ -1,14 +1,14 @@
 package com.plazoleta.foodcourtmicroservice.domain.usecases;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
-import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 
 public class RestaurantUseCase implements RestaurantServicePort {
 
@@ -31,7 +31,7 @@ public class RestaurantUseCase implements RestaurantServicePort {
         String role = userServicePort.getUserRoleById(restaurantModel.getOwnerId());
         if (!"OWNER".equalsIgnoreCase(role)) {
             throw new InvalidOwnerException(
-                String.format(DomainMessagesConstants.USER_IS_NOT_OWNER, restaurantModel.getOwnerId()));
+                    String.format(DomainMessagesConstants.USER_IS_NOT_OWNER, restaurantModel.getOwnerId()));
         }
 
         boolean exists = restaurantPersistencePort.existsByNit(restaurantModel.getNit());

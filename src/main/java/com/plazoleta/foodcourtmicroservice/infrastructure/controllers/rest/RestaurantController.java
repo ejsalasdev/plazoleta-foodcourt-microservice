@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveRestaurantRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveRestaurantResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.RestaurantHandler;
+import com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,10 +31,12 @@ public class RestaurantController {
 
     @Operation(summary = "Create a new restaurant", description = "Creates a new restaurant with the provided data.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Restaurant created successfully", content = @Content(schema = @Schema(implementation = SaveRestaurantResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse.class))),
-            @ApiResponse(responseCode = "409", description = "Restaurant with given NIT already exists", content = @Content(schema = @Schema(implementation = com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse.class)))
+        @ApiResponse(responseCode = "201", description = "Restaurant created successfully", content = @Content(schema = @Schema(implementation = SaveRestaurantResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "403", description = "User does not have OWNER role", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "404", description = "User with given ID does not exist", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "409", description = "Restaurant with given NIT already exists", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
     })
     @PostMapping("/")
     public ResponseEntity<SaveRestaurantResponse> save(@RequestBody SaveRestaurantRequest request) {

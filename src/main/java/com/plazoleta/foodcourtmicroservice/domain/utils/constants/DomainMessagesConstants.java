@@ -3,6 +3,7 @@ package com.plazoleta.foodcourtmicroservice.domain.utils.constants;
 public final class DomainMessagesConstants {
 
     public static final String USER_IS_NOT_OWNER = "The user with id %d is not an OWNER.";
+    public static final String USER_DOES_NOT_EXIST = "The user with id %d does not exist.";
     public static final String RESTAURANT_NIT_ALREADY_EXISTS = "Restaurant with NIT %s already exists.";
     public static final String REQUIRED_FIELDS = "All required fields must be present.";
 
