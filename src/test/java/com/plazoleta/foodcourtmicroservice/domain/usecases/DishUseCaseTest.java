@@ -155,9 +155,11 @@ class DishUseCaseTest {
     }
 
     @Test
-    void when_save_withValidDish_then_dishIsSaved() {
+    void when_save_withValidDishAndOwnerOfRestaurant_then_dishIsSaved() {
         // Arrange
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("OWNER"));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L)).thenReturn(true);
         when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId()))
                 .thenReturn(false);
 
@@ -166,15 +168,37 @@ class DishUseCaseTest {
 
         // Assert
         verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
         verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId());
         verify(persistencePort, times(1)).save(model);
     }
 
     @Test
+    void when_save_withOwnerRoleButNotOwnerOfRestaurant_then_throwUnauthorizedOperationException() {
+        // Arrange
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("OWNER"));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(2L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 2L)).thenReturn(false);
+
+        // Act & Assert
+        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class, () -> useCase.save(model));
+        assertEquals(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT, ex.getMessage());
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 2L);
+        verify(validatorChain, never()).validate(any(), any());
+        verify(persistencePort, never()).existsByNameAndRestaurantId(any(), anyLong());
+        verify(persistencePort, never()).save(any());
+    }
+
+    @Test
     void when_save_withExistingDishName_then_throwElementAlreadyExistsException() {
         // Arrange
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("OWNER"));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L)).thenReturn(true);
         when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId()))
                 .thenReturn(true);
 
@@ -182,6 +206,8 @@ class DishUseCaseTest {
         ElementAlreadyExistsException ex = assertThrows(ElementAlreadyExistsException.class, () -> useCase.save(model));
         assertEquals(String.format(DomainMessagesConstants.DISH_ALREADY_EXISTS, model.getName()), ex.getMessage());
         verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
         verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId());
         verify(persistencePort, never()).save(any());
@@ -191,12 +217,16 @@ class DishUseCaseTest {
     void when_save_withInvalidDish_then_throwValidationException() {
         // Arrange
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("OWNER"));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L)).thenReturn(true);
         doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model, OperationType.CREATE);
 
         // Act & Assert
         RuntimeException ex = assertThrows(RuntimeException.class, () -> useCase.save(model));
         assertEquals("Validation error", ex.getMessage());
         verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
         verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(persistencePort, never()).existsByNameAndRestaurantId(any(), anyLong());
         verify(persistencePort, never()).save(any());
