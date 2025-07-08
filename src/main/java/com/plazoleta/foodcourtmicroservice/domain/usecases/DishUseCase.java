@@ -6,6 +6,7 @@ import java.util.List;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
@@ -71,6 +72,20 @@ public class DishUseCase implements DishServicePort {
 
     @Override
     public void setDishActive(Long dishId, Long restaurantId, boolean active) {
+        List<String> currentUserRoles = authenticatedUserPort.getCurrentUserRoles();
+
+        if (currentUserRoles.isEmpty() || !currentUserRoles.contains("OWNER")) {
+            throw new UnauthorizedOperationException(
+                    DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_ENABLE_DISABLE_DISH);
+        }
+
+        Long currentUserId = authenticatedUserPort.getCurrentUserId();
+
+        if (!dishPersistencePort.existsByRestaurantIdAndOwnerId(restaurantId, currentUserId)) {
+            throw new UnauthorizedOperationException(
+                    DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT);
+        }
+
         if (!dishPersistencePort.existsByIdAndRestaurantId(dishId, restaurantId)) {
             throw new ElementNotFoundException(
                     String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId));
