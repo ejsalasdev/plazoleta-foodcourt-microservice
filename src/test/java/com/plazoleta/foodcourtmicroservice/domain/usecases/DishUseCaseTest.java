@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -56,7 +57,7 @@ class DishUseCaseTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        model = new DishModel(1L, "Hamburguesa", new java.math.BigDecimal("15000.00"), "Clásica hamburguesa",
+        model = new DishModel(1L, "Hamburguesa", new BigDecimal("15000.00"), "Clásica hamburguesa",
                 "https://img.com/hamburguesa.jpg", 2L, buildRestaurant(10L), true);
         useCase = new DishUseCase(persistencePort, validatorChain, authenticatedUserPort);
     }
@@ -183,7 +184,8 @@ class DishUseCaseTest {
         when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 2L)).thenReturn(false);
 
         // Act & Assert
-        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class, () -> useCase.save(model));
+        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class,
+                () -> useCase.save(model));
         assertEquals(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT, ex.getMessage());
         verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
         verify(authenticatedUserPort, times(1)).getCurrentUserId();
@@ -247,30 +249,43 @@ class DishUseCaseTest {
     }
 
     @Test
+
     void when_updateDish_withValidData_then_dishIsUpdated() {
         // Arrange
         Long dishId = 1L;
         Long restaurantId = 10L;
-        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        BigDecimal price = new BigDecimal("20000.00");
         String description = "Nueva descripción";
+        when(authenticatedUserPort.getCurrentUserRoles())
+                .thenReturn(Collections.singletonList(DomainMessagesConstants.OWNER_ROLE));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(restaurantId, 1L)).thenReturn(true);
         when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(true);
 
         // Act
         useCase.updateDish(dishId, restaurantId, price, description);
 
         // Assert
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(restaurantId, 1L);
         verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
         verify(validatorChain, times(1)).validate(any(DishModel.class), eq(OperationType.UPDATE));
         verify(persistencePort, times(1)).updateDish(dishId, restaurantId, price, description);
     }
 
     @Test
+
     void when_updateDish_dishNotFound_then_throwElementNotFoundException() {
         // Arrange
         Long dishId = 1L;
         Long restaurantId = 10L;
-        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        BigDecimal price = new BigDecimal("20000.00");
         String description = "Nueva descripción";
+        when(authenticatedUserPort.getCurrentUserRoles())
+                .thenReturn(Collections.singletonList(DomainMessagesConstants.OWNER_ROLE));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(restaurantId, 1L)).thenReturn(true);
         when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(false);
 
         // Act & Assert
@@ -278,18 +293,26 @@ class DishUseCaseTest {
                 () -> useCase.updateDish(dishId, restaurantId, price, description));
         assertEquals(String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId),
                 ex.getMessage());
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(restaurantId, 1L);
         verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
         verify(validatorChain, never()).validate(any(DishModel.class), any());
         verify(persistencePort, never()).updateDish(anyLong(), anyLong(), any(), any());
     }
 
     @Test
+
     void when_updateDish_validationFails_then_throwValidationException() {
         // Arrange
         Long dishId = 1L;
         Long restaurantId = 10L;
-        java.math.BigDecimal price = new java.math.BigDecimal("20000.00");
+        BigDecimal price = new BigDecimal("20000.00");
         String description = "Nueva descripción";
+        when(authenticatedUserPort.getCurrentUserRoles())
+                .thenReturn(Collections.singletonList(DomainMessagesConstants.OWNER_ROLE));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(restaurantId, 1L)).thenReturn(true);
         when(persistencePort.existsByIdAndRestaurantId(dishId, restaurantId)).thenReturn(true);
         doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(any(DishModel.class),
                 eq(OperationType.UPDATE));
@@ -298,8 +321,56 @@ class DishUseCaseTest {
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> useCase.updateDish(dishId, restaurantId, price, description));
         assertEquals("Validation error", ex.getMessage());
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(restaurantId, 1L);
         verify(persistencePort, times(1)).existsByIdAndRestaurantId(dishId, restaurantId);
         verify(validatorChain, times(1)).validate(any(DishModel.class), eq(OperationType.UPDATE));
+        verify(persistencePort, never()).updateDish(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
+    void when_updateDish_userNotOwnerRole_then_throwUnauthorizedOperationException() {
+        // Arrange
+        Long dishId = 1L;
+        Long restaurantId = 10L;
+        BigDecimal price = new BigDecimal("20000.00");
+        String description = "Nueva descripción";
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("EMPLOYEE"));
+
+        // Act & Assert
+        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class,
+                () -> useCase.updateDish(dishId, restaurantId, price, description));
+        assertEquals(DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_UPDATE_DISH, ex.getMessage());
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, never()).getCurrentUserId();
+        verify(persistencePort, never()).existsByRestaurantIdAndOwnerId(anyLong(), anyLong());
+        verify(persistencePort, never()).existsByIdAndRestaurantId(anyLong(), anyLong());
+        verify(validatorChain, never()).validate(any(DishModel.class), any());
+        verify(persistencePort, never()).updateDish(anyLong(), anyLong(), any(), any());
+    }
+
+    @Test
+    void when_updateDish_userNotOwnerOfRestaurant_then_throwUnauthorizedOperationException() {
+        // Arrange
+        Long dishId = 1L;
+        Long restaurantId = 10L;
+        BigDecimal price = new BigDecimal("20000.00");
+        String description = "Nueva descripción";
+        when(authenticatedUserPort.getCurrentUserRoles())
+                .thenReturn(Collections.singletonList(DomainMessagesConstants.OWNER_ROLE));
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(99L);
+        when(persistencePort.existsByRestaurantIdAndOwnerId(restaurantId, 99L)).thenReturn(false);
+
+        // Act & Assert
+        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class,
+                () -> useCase.updateDish(dishId, restaurantId, price, description));
+        assertEquals(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT, ex.getMessage());
+        verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+        verify(authenticatedUserPort, times(1)).getCurrentUserId();
+        verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(restaurantId, 99L);
+        verify(persistencePort, never()).existsByIdAndRestaurantId(anyLong(), anyLong());
+        verify(validatorChain, never()).validate(any(DishModel.class), any());
         verify(persistencePort, never()).updateDish(anyLong(), anyLong(), any(), any());
     }
 }

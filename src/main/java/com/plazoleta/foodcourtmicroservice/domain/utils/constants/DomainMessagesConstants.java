@@ -1,8 +1,7 @@
-
-
 package com.plazoleta.foodcourtmicroservice.domain.utils.constants;
 
 public final class DomainMessagesConstants {
+    public static final String USER_NOT_AUTHORIZED_TO_UPDATE_DISH = "User is not authorized to update a dish. Only users with the OWNER role can update dishes.";
     public static final String USER_NOT_AUTHORIZED_TO_CREATE_RESTAURANT = "Only users with ADMIN role can create a restaurant.";
 
     public static final String USER_IS_NOT_OWNER = "The user with id %d is not an OWNER.";
@@ -18,6 +17,8 @@ public final class DomainMessagesConstants {
     public static final String NAME_ONLY_NUMBERS_REGEX = "\\d+";
     public static final String NIT_NUMERIC_REGEX = "\\d+";
     public static final String PHONE_REGEX = "^\\+?\\d+$";
+
+    public static final String OWNER_ROLE = "OWNER";
 
     public static final String NIT_REQUIRED = "NIT is required.";
     public static final String NIT_NUMERIC = "NIT must be numeric.";
