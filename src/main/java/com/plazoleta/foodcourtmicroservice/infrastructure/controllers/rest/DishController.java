@@ -37,6 +37,7 @@ public class DishController {
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Dish created successfully", content = @Content(schema = @Schema(implementation = SaveDishResponse.class))),
                         @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "403", description = "User not authorized to create a dish", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "409", description = "Dish with given name already exists in this restaurant", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
         })

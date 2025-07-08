@@ -39,9 +39,15 @@ public class DishUseCase implements DishServicePort {
                     DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_CREATE_DISH);
         }
 
+        Long currentUserId = authenticatedUserPort.getCurrentUserId();
+        Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
+        
+        if (!dishPersistencePort.existsByRestaurantIdAndOwnerId(restaurantId, currentUserId)) {
+            throw new UnauthorizedOperationException(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT);
+        }
+
         dishValidatorChain.validate(dishModel, OperationType.CREATE);
 
-        Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
         if (dishPersistencePort.existsByNameAndRestaurantId(dishModel.getName(), restaurantId)) {
             throw new ElementAlreadyExistsException(
                     String.format(DomainMessagesConstants.DISH_ALREADY_EXISTS, dishModel.getName()));
