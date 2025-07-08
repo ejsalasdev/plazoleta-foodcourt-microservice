@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveDishRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.request.SetDishActiveRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.request.UpdateDishRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.UpdateDishResponse;
@@ -39,7 +40,7 @@ public class DishController {
                         @ApiResponse(responseCode = "409", description = "Dish with given name already exists in this restaurant", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
         })
-        @PostMapping
+        @PostMapping("/")
         public ResponseEntity<SaveDishResponse> save(@RequestBody SaveDishRequest request) {
                 return ResponseEntity.status(HttpStatus.CREATED).body(dishHandler.save(request));
         }
@@ -51,10 +52,25 @@ public class DishController {
                         @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
         })
-        @PatchMapping("/{dishId}")
+        @PatchMapping("/{id}")
         public ResponseEntity<UpdateDishResponse> update(
-                        @PathVariable @Schema(description = "ID of the dish to update", example = "1") Long dishId,
+                        @PathVariable @Schema(description = "ID of the dish to update", example = "1") Long id,
                         @RequestBody UpdateDishRequest request) {
-                return ResponseEntity.status(HttpStatus.OK).body(dishHandler.update(dishId, request));
+                return ResponseEntity.status(HttpStatus.OK).body(dishHandler.update(id, request));
+        }
+
+        @Operation(summary = "Enable or disable a dish", description = "Enables or disables a dish (active flag) for a given restaurant. Only the owner can perform this action.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Dish active status updated successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+        })
+        @PatchMapping("/{id}/active")
+        public ResponseEntity<Void> setActive(
+                        @PathVariable @Schema(description = "ID of the dish to enable/disable", example = "1") Long id,
+                        @RequestBody SetDishActiveRequest request) {
+                dishHandler.setActive(id, request);
+                return ResponseEntity.ok().build();
         }
 }

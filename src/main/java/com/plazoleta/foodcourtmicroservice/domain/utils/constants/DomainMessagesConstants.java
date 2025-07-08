@@ -23,6 +23,7 @@ public final class DomainMessagesConstants {
 
     public static final int PHONE_MAX_LENGTH = 13;
 
+    public static final String USER_NOT_AUTHORIZED_TO_CREATE_DISH = "User is not authorized to create a dish. Only users with the OWNER role can create dishes.";
     public static final String DISH_NAME_REQUIRED = "Dish name is required.";
     public static final String DISH_NAME_NOT_EMPTY = "Dish name cannot be empty.";
     public static final String DISH_DESCRIPTION_REQUIRED = "Dish description is required.";

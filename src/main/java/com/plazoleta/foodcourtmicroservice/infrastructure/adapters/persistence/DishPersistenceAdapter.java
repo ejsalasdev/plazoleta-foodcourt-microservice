@@ -42,4 +42,14 @@ public class DishPersistenceAdapter implements DishPersistencePort {
             DishSpecifications.idEqualsAndRestaurantId(dishId, restaurantId)
         ) > 0;
     }
+
+    @Override
+    public void setDishActive(Long dishId, Long restaurantId, boolean active) {
+        dishRepository.findById(dishId).ifPresent(dish -> {
+            if (dish.getRestaurant().getId().equals(restaurantId)) {
+                dish.setActive(active);
+                dishRepository.save(dish);
+            }
+        });
+    }
 }

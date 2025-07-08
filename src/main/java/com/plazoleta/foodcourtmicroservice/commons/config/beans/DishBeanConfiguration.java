@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.DishUseCase;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
@@ -33,7 +34,8 @@ public class DishBeanConfiguration {
     @Bean
     public DishServicePort dishServicePort(
             DishPersistencePort dishPersistencePort,
-            DishValidatorChain dishValidatorChain) {
-        return new DishUseCase(dishPersistencePort, dishValidatorChain);
+            DishValidatorChain dishValidatorChain,
+            AuthenticatedUserPort authenticatedUserPort) {
+        return new DishUseCase(dishPersistencePort, dishValidatorChain, authenticatedUserPort);
     }
 }
