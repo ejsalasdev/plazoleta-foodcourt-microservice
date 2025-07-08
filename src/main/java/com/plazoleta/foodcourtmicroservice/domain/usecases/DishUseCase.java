@@ -34,14 +34,14 @@ public class DishUseCase implements DishServicePort {
 
         List<String> currentUserRoles = authenticatedUserPort.getCurrentUserRoles();
 
-        if (currentUserRoles.isEmpty() || !currentUserRoles.contains("OWNER")) {
+        if (currentUserRoles.isEmpty() || !currentUserRoles.contains(DomainMessagesConstants.OWNER_ROLE)) {
             throw new ElementNotFoundException(
                     DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_CREATE_DISH);
         }
 
         Long currentUserId = authenticatedUserPort.getCurrentUserId();
         Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
-        
+
         if (!dishPersistencePort.existsByRestaurantIdAndOwnerId(restaurantId, currentUserId)) {
             throw new UnauthorizedOperationException(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT);
         }
@@ -58,6 +58,18 @@ public class DishUseCase implements DishServicePort {
 
     @Override
     public void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description) {
+        List<String> currentUserRoles = authenticatedUserPort.getCurrentUserRoles();
+        if (currentUserRoles.isEmpty() || !currentUserRoles.contains(DomainMessagesConstants.OWNER_ROLE)) {
+            throw new UnauthorizedOperationException(
+                    DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_UPDATE_DISH);
+        }
+
+        Long currentUserId = authenticatedUserPort.getCurrentUserId();
+        if (!dishPersistencePort.existsByRestaurantIdAndOwnerId(restaurantId, currentUserId)) {
+            throw new UnauthorizedOperationException(
+                    DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT);
+        }
+
         if (!dishPersistencePort.existsByIdAndRestaurantId(dishId, restaurantId)) {
             throw new ElementNotFoundException(
                     String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId));
@@ -80,7 +92,7 @@ public class DishUseCase implements DishServicePort {
     public void setDishActive(Long dishId, Long restaurantId, boolean active) {
         List<String> currentUserRoles = authenticatedUserPort.getCurrentUserRoles();
 
-        if (currentUserRoles.isEmpty() || !currentUserRoles.contains("OWNER")) {
+        if (currentUserRoles.isEmpty() || !currentUserRoles.contains(DomainMessagesConstants.OWNER_ROLE)) {
             throw new UnauthorizedOperationException(
                     DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_ENABLE_DISABLE_DISH);
         }

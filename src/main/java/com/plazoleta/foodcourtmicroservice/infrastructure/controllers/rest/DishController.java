@@ -50,6 +50,7 @@ public class DishController {
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Dish updated successfully", content = @Content(schema = @Schema(implementation = UpdateDishResponse.class))),
                         @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "403", description = "User not authorized to update this dish", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "404", description = "Dish not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
         })
