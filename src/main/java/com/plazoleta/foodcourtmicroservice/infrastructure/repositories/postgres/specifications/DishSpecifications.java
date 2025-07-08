@@ -20,4 +20,10 @@ public class DishSpecifications {
                 cb.equal(root.get("id"), dishId),
                 cb.equal(root.get("restaurant").get("id"), restaurantId));
     }
+
+    public static Specification<DishEntity> restaurantIdEqualsAndOwnerId(Long restaurantId, Long currentUserId) {
+        return (root, query, cb) -> cb.and(
+                cb.equal(root.get("restaurant").get("id"), restaurantId),
+                cb.equal(root.get("restaurant").get("ownerId"), currentUserId));
+    }
 }

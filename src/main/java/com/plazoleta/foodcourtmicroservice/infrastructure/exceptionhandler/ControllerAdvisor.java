@@ -13,6 +13,7 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementForma
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengthException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeAuthoritiesException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeIdException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.UserNotFoundException;
@@ -68,6 +69,13 @@ public class ControllerAdvisor {
 
         @ExceptionHandler(InvalidOwnerException.class)
         public ResponseEntity<ExceptionResponse> handleInvalidOwnerException(InvalidOwnerException exception) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(UnauthorizedOperationException.class)
+        public ResponseEntity<ExceptionResponse> handleUnauthorizedOperationException(
+                        UnauthorizedOperationException exception) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
         }

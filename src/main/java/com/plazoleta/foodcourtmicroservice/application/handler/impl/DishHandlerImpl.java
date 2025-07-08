@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveDishRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.request.SetDishActiveRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.request.UpdateDishRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.UpdateDishResponse;
@@ -32,5 +33,10 @@ public class DishHandlerImpl implements DishHandler {
     public UpdateDishResponse update(Long dishId, UpdateDishRequest request) {
         dishServicePort.updateDish(dishId, request.restaurantId(), request.price(), request.description());
         return new UpdateDishResponse(ApplicationMessagesConstants.DISH_UPDATED_SUCCESSFULLY, LocalDateTime.now());
+    }
+
+    @Override
+    public void setActive(Long dishId, SetDishActiveRequest request) {
+        dishServicePort.setDishActive(dishId, request.getRestaurantId(), request.getActive());
     }
 }

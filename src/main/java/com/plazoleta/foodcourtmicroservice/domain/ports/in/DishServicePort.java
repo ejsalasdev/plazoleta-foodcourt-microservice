@@ -8,4 +8,6 @@ public interface DishServicePort {
     void save(DishModel dishModel);
 
     void updateDish(Long dishId, Long restaurantId, BigDecimal price, String description);
+
+    void setDishActive(Long dishId, Long restaurantId, boolean active);
 }

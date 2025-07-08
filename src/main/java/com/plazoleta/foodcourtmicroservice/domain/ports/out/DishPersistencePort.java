@@ -14,4 +14,7 @@ public interface DishPersistencePort {
 
     boolean existsByIdAndRestaurantId(Long dishId, Long restaurantId);
 
+    void setDishActive(Long dishId, Long restaurantId, boolean active);
+
+    boolean existsByRestaurantIdAndOwnerId(Long restaurantId, Long currentUserId);
 }
