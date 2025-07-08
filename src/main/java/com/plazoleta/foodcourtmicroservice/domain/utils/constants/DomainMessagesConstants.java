@@ -1,7 +1,9 @@
 
+
 package com.plazoleta.foodcourtmicroservice.domain.utils.constants;
 
 public final class DomainMessagesConstants {
+    public static final String USER_NOT_AUTHORIZED_TO_CREATE_RESTAURANT = "Only users with ADMIN role can create a restaurant.";
 
     public static final String USER_IS_NOT_OWNER = "The user with id %d is not an OWNER.";
     public static final String USER_DOES_NOT_EXIST = "The user with id %d does not exist.";
