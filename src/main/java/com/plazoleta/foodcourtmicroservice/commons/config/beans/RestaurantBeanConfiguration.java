@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.foodcourtmicroservice.application.client.handler.UserHandlerClient;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.RestaurantUseCase;
@@ -16,8 +17,8 @@ import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.
 
 import lombok.RequiredArgsConstructor;
 
-@Configuration
 @RequiredArgsConstructor
+@Configuration
 public class RestaurantBeanConfiguration {
 
     private final RestaurantRepository restaurantRepository;
@@ -43,10 +44,13 @@ public class RestaurantBeanConfiguration {
     public RestaurantServicePort restaurantServicePort(
             RestaurantPersistencePort restaurantPersistencePort,
             RestaurantValidatorChain restaurantValidatorChain,
-            UserServicePort userServicePort
-            ) {
+            UserServicePort userServicePort,
+            AuthenticatedUserPort authenticatedUserPort) {
         return new RestaurantUseCase(
-                restaurantPersistencePort, restaurantValidatorChain, userServicePort);
+                restaurantPersistencePort,
+                restaurantValidatorChain,
+                userServicePort,
+                authenticatedUserPort);
     }
 
 }

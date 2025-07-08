@@ -7,6 +7,8 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 
@@ -15,21 +17,31 @@ public class RestaurantUseCase implements RestaurantServicePort {
     private final RestaurantPersistencePort restaurantPersistencePort;
     private final RestaurantValidatorChain restaurantValidatorChain;
     private final UserServicePort userServicePort;
+    private final AuthenticatedUserPort authenticatedUserPort;
 
     public RestaurantUseCase(RestaurantPersistencePort restaurantPersistencePort,
             RestaurantValidatorChain restaurantValidatorChain,
-            UserServicePort userServicePort) {
+            UserServicePort userServicePort,
+            AuthenticatedUserPort authenticatedUserPort) {
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.restaurantValidatorChain = restaurantValidatorChain;
         this.userServicePort = userServicePort;
+        this.authenticatedUserPort = authenticatedUserPort;
     }
 
     @Override
     public void save(RestaurantModel restaurantModel) {
         restaurantValidatorChain.validate(restaurantModel, OperationType.CREATE);
 
-        String role = userServicePort.getUserRoleById(restaurantModel.getOwnerId());
-        if (!"OWNER".equalsIgnoreCase(role)) {
+        boolean isAdmin = authenticatedUserPort.getCurrentUserRoles().stream()
+                .anyMatch("ADMIN"::equalsIgnoreCase);
+        if (!isAdmin) {
+            throw new UnauthorizedOperationException(
+                    DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_CREATE_RESTAURANT);
+        }
+
+        String ownerRole = userServicePort.getUserRoleById(restaurantModel.getOwnerId());
+        if (!"OWNER".equalsIgnoreCase(ownerRole)) {
             throw new InvalidOwnerException(
                     String.format(DomainMessagesConstants.USER_IS_NOT_OWNER, restaurantModel.getOwnerId()));
         }
