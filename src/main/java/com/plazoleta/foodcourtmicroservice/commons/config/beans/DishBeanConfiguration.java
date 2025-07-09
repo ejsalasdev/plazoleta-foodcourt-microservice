@@ -1,5 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.commons.config.beans;
 
+import java.util.Set;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,6 +10,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPor
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.DishUseCase;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence.DishPersistenceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.DishEntityMapper;
 import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.DishRepository;
@@ -32,10 +35,16 @@ public class DishBeanConfiguration {
     }
 
     @Bean
+    public PaginationValidatorChain dishPaginationValidatorChain() {
+        return new PaginationValidatorChain(Set.of("name", "price", "description", "category", "active"));
+    }
+
+    @Bean
     public DishServicePort dishServicePort(
             DishPersistencePort dishPersistencePort,
             DishValidatorChain dishValidatorChain,
-            AuthenticatedUserPort authenticatedUserPort) {
-        return new DishUseCase(dishPersistencePort, dishValidatorChain, authenticatedUserPort);
+            AuthenticatedUserPort authenticatedUserPort,
+            PaginationValidatorChain dishPaginationValidatorChain) {
+        return new DishUseCase(dishPersistencePort, dishValidatorChain, authenticatedUserPort, dishPaginationValidatorChain);
     }
 }

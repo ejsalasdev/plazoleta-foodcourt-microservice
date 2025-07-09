@@ -13,20 +13,25 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
 public class DishUseCase implements DishServicePort {
 
     private final DishPersistencePort dishPersistencePort;
     private final DishValidatorChain dishValidatorChain;
     private final AuthenticatedUserPort authenticatedUserPort;
+    private final PaginationValidatorChain paginationValidatorChain;
 
     public DishUseCase(DishPersistencePort dishPersistencePort,
             DishValidatorChain dishValidatorChain,
-            AuthenticatedUserPort authenticatedUserPort) {
+            AuthenticatedUserPort authenticatedUserPort,
+            PaginationValidatorChain paginationValidatorChain) {
         this.dishPersistencePort = dishPersistencePort;
         this.dishValidatorChain = dishValidatorChain;
         this.authenticatedUserPort = authenticatedUserPort;
+        this.paginationValidatorChain = paginationValidatorChain;
     }
 
     @Override
@@ -109,5 +114,11 @@ public class DishUseCase implements DishServicePort {
                     String.format(DomainMessagesConstants.DISH_NOT_FOUND_IN_RESTAURANT, dishId, restaurantId));
         }
         dishPersistencePort.setDishActive(dishId, restaurantId, active);
+    }
+
+    @Override
+    public PageInfo<DishModel> findAllByRestaurantId(Long restaurantId, Long categoryId, Integer page, Integer size, String sortBy, boolean orderAsc) {
+        paginationValidatorChain.validate(page, size, sortBy, orderAsc);
+        return dishPersistencePort.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc);
     }
 }
