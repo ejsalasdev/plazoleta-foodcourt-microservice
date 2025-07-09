@@ -15,6 +15,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      mode: always
+
 jwt:
   secret: ${JWT_SECRET}
   user: ${JWT_USER:AUTH0JWT_BACKEND}
@@ -22,9 +26,9 @@ jwt:
   
   # Uncomment the following lines to enable debug logging
 
-logging:
- level:
-   root: debug
+# logging:
+#  level:
+#    root: debug
 
 user-microservice:
   url: http://localhost:8091
