@@ -1,6 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.domain.utils.constants;
 
 public final class DomainMessagesConstants {
+
     public static final String USER_NOT_AUTHORIZED_TO_UPDATE_DISH = "User is not authorized to update a dish. Only users with the OWNER role can update dishes.";
     public static final String USER_NOT_AUTHORIZED_TO_CREATE_RESTAURANT = "Only users with ADMIN role can create a restaurant.";
 
@@ -43,6 +44,10 @@ public final class DomainMessagesConstants {
     public static final String DISH_NOT_FOUND_IN_RESTAURANT = "Dish with id %d does not belong to restaurant with id %d or does not exist.";
     public static final String DISH_IMAGE_URL_INVALID = "Dish image URL is invalid.";
     public static final String URL_IMAGE_REGEX = "^(https?://).+\\.(jpg|jpeg|png|gif|bmp)$";
+
+    public static final String PAGINATION_PAGE_NUMBER_INVALID = "Page number must be 0 or greater.";
+    public static final String PAGINATION_PAGE_SIZE_INVALID = "Page size must be greater than 0.";
+    public static final String PAGINATION_SORTBY_INVALID = "Invalid sortBy field: %s";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");
