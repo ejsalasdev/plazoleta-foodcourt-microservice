@@ -15,6 +15,8 @@ public final class DomainMessagesConstants {
     public static final String RESTAURANT_NAME_REQUIRED = "Restaurant name is required.";
     public static final String RESTAURANT_NAME_NUMERIC = "Restaurant name cannot be only numbers.";
 
+    public static final String RESTAURANT_NOT_FOUND = "Restaurant with id %d does not exist.";
+
     public static final String NAME_ONLY_NUMBERS_REGEX = "\\d+";
     public static final String NIT_NUMERIC_REGEX = "\\d+";
     public static final String PHONE_REGEX = "^\\+?\\d+$";
@@ -39,6 +41,7 @@ public final class DomainMessagesConstants {
     public static final String DISH_PRICE_MUST_BE_INTEGER = "Dish price must be an integer.";
     public static final String DISH_CATEGORY_ID_REQUIRED = "Category ID is required.";
     public static final String DISH_RESTAURANT_ID_REQUIRED = "Restaurant ID is required.";
+    public static final String CATEGORY_NOT_FOUND = "Category with id %d does not exist.";
 
     public static final String DISH_ALREADY_EXISTS = "A dish with the same name '%s' already exists in this restaurant.";
     public static final String DISH_NOT_FOUND_IN_RESTAURANT = "Dish with id %d does not belong to restaurant with id %d or does not exist.";

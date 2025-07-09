@@ -33,6 +33,11 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
     }
 
     @Override
+    public boolean existsById(Long id) {
+        return restaurantRepository.existsById(id);
+    }
+
+    @Override
     public PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc) {
         Sort sort  = Sort.by(sortBy);
         if (!orderAsc) {

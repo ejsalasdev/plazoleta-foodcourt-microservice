@@ -33,6 +33,7 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.POST, "/api/v1/dish/").hasAuthority("OWNER");
                     http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}").hasAuthority("OWNER");
                     http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}/active").hasAuthority("OWNER");
+                    http.requestMatchers(HttpMethod.GET, "/api/v1/dish/restaurant/{restaurantId}").hasAuthority("CUSTOMER");
 
                     http.anyRequest().denyAll();
                 })

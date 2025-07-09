@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
+import com.plazoleta.foodcourtmicroservice.domain.model.CategoryModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
@@ -22,29 +23,37 @@ class DishValidatorChainTest {
                 "https://logo.com/logo.jpg", 1L);
     }
 
+    private CategoryModel buildCategory(Long id) {
+        return new CategoryModel(id, "cat", "desc");
+    }
+
     @Test
     void when_allFieldsValid_then_noException() {
-        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "https://img.com/pizza.jpg", 2L,
+        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "https://img.com/pizza.jpg",
+                buildCategory(2L),
                 buildRestaurant(10L), true);
         assertDoesNotThrow(() -> validatorChain.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_missingRequiredField_then_throwRequiredFieldsException() {
-        DishModel model = new DishModel(1L, "name", new BigDecimal("10000"), " ", "url", 2L, buildRestaurant(10L), true);
+        DishModel model = new DishModel(1L, "name", new BigDecimal("10000"), " ", "url", buildCategory(2L),
+                buildRestaurant(10L), true);
         assertThrows(RequiredFieldsException.class, () -> validatorChain.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_invalidName_then_throwInvalidElementFormatException() {
-        DishModel model = new DishModel(1L, "   ", new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
+        DishModel model = new DishModel(1L, "   ", new BigDecimal("10000"), "desc", "url", buildCategory(2L),
+                buildRestaurant(10L),
                 true);
         assertThrows(InvalidElementFormatException.class, () -> validatorChain.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_invalidPrice_then_throwInvalidElementFormatException() {
-        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("0"), "desc", "url", 2L, buildRestaurant(10L),
+        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("0"), "desc", "url", buildCategory(2L),
+                buildRestaurant(10L),
                 true);
         assertThrows(InvalidElementFormatException.class, () -> validatorChain.validate(model, OperationType.CREATE));
     }

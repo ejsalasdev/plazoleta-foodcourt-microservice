@@ -2,19 +2,23 @@ package com.plazoleta.foodcourtmicroservice.infrastructure.controllers.rest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveDishRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SetDishActiveRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.request.UpdateDishRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.DishResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.UpdateDishResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.DishHandler;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,5 +78,24 @@ public class DishController {
                         @RequestBody SetDishActiveRequest request) {
                 dishHandler.setActive(id, request);
                 return ResponseEntity.ok().build();
+        }
+
+        @Operation(summary = "List dishes by restaurant", description = "Returns a paginated list of dishes for a specific restaurant, with optional category filter.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Dishes retrieved successfully"),
+                        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Restaurant not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+        })
+        @GetMapping("/restaurant/{restaurantId}")
+        public ResponseEntity<PageInfo<DishResponse>> findAllByRestaurantId(
+                        @PathVariable @Schema(description = "ID of the restaurant", example = "1") Long restaurantId,
+                        @RequestParam(required = false) @Schema(description = "Category ID filter (optional)", example = "2") Long categoryId,
+                        @RequestParam(defaultValue = "0") @Schema(description = "Page number (0-based)", example = "0") Integer page,
+                        @RequestParam(defaultValue = "10") @Schema(description = "Number of items per page", example = "10") Integer size,
+                        @RequestParam(defaultValue = "name") @Schema(description = "Field to sort by", example = "name") String sortBy,
+                        @RequestParam(defaultValue = "true") @Schema(description = "Sort in ascending order", example = "true") boolean orderAsc) {
+                return ResponseEntity.ok(dishHandler.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy,
+                                orderAsc));
         }
 }
