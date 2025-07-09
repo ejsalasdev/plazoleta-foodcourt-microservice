@@ -1,4 +1,3 @@
-// ...existing code...
 package com.plazoleta.foodcourtmicroservice.domain.usecases;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,7 +14,9 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+
 import java.util.Collections;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,9 +28,11 @@ import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
+import com.plazoleta.foodcourtmicroservice.domain.model.CategoryModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.CategoryPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
@@ -41,6 +44,10 @@ class DishUseCaseTest {
         private RestaurantModel buildRestaurant(Long id) {
                 return new RestaurantModel(id, "Restaurante Prueba", "NIT123", "Calle 1", "123456789",
                                 "https://logo.com/logo.jpg", 1L);
+        }
+
+        private CategoryModel buildCategory(Long id) {
+                return new CategoryModel(id, "cat", "desc");
         }
 
         @Mock
@@ -58,6 +65,9 @@ class DishUseCaseTest {
         @Mock
         private RestaurantPersistencePort restaurantPersistencePort;
 
+        @Mock
+        private CategoryPersistencePort categoryPersistencePort;
+
         @InjectMocks
         private DishUseCase useCase;
 
@@ -67,9 +77,11 @@ class DishUseCaseTest {
         void setUp() {
                 MockitoAnnotations.openMocks(this);
                 model = new DishModel(1L, "Hamburguesa", new BigDecimal("15000.00"), "Clásica hamburguesa",
-                                "https://img.com/hamburguesa.jpg", 2L, buildRestaurant(10L), true);
+                                "https://img.com/hamburguesa.jpg", buildCategory(2L), buildRestaurant(10L), true);
                 useCase = new DishUseCase(persistencePort, validatorChain, authenticatedUserPort,
-                                paginationValidatorChain, restaurantPersistencePort);
+                                paginationValidatorChain, restaurantPersistencePort, categoryPersistencePort);
+                // Default: category exists
+                when(categoryPersistencePort.existsById(anyLong())).thenReturn(true);
         }
 
         @Test
@@ -174,6 +186,7 @@ class DishUseCaseTest {
                                 .thenReturn(true);
                 when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId()))
                                 .thenReturn(false);
+                when(categoryPersistencePort.existsById(model.getCategory().getId())).thenReturn(true);
 
                 // Act
                 useCase.save(model);
@@ -182,6 +195,7 @@ class DishUseCaseTest {
                 verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
                 verify(authenticatedUserPort, times(1)).getCurrentUserId();
                 verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
+                verify(categoryPersistencePort, times(1)).existsById(model.getCategory().getId());
                 verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
                 verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(),
                                 model.getRestaurant().getId());
@@ -195,6 +209,7 @@ class DishUseCaseTest {
                 when(authenticatedUserPort.getCurrentUserId()).thenReturn(2L);
                 when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 2L))
                                 .thenReturn(false);
+                when(categoryPersistencePort.existsById(model.getCategory().getId())).thenReturn(true);
 
                 // Act & Assert
                 UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class,
@@ -217,6 +232,7 @@ class DishUseCaseTest {
                                 .thenReturn(true);
                 when(persistencePort.existsByNameAndRestaurantId(model.getName(), model.getRestaurant().getId()))
                                 .thenReturn(true);
+                when(categoryPersistencePort.existsById(model.getCategory().getId())).thenReturn(true);
 
                 // Act & Assert
                 ElementAlreadyExistsException ex = assertThrows(ElementAlreadyExistsException.class,
@@ -226,6 +242,7 @@ class DishUseCaseTest {
                 verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
                 verify(authenticatedUserPort, times(1)).getCurrentUserId();
                 verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
+                verify(categoryPersistencePort, times(1)).existsById(model.getCategory().getId());
                 verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
                 verify(persistencePort, times(1)).existsByNameAndRestaurantId(model.getName(),
                                 model.getRestaurant().getId());
@@ -239,6 +256,7 @@ class DishUseCaseTest {
                 when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
                 when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L))
                                 .thenReturn(true);
+                when(categoryPersistencePort.existsById(model.getCategory().getId())).thenReturn(true);
                 doThrow(new RuntimeException("Validation error")).when(validatorChain).validate(model,
                                 OperationType.CREATE);
 
@@ -248,6 +266,7 @@ class DishUseCaseTest {
                 verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
                 verify(authenticatedUserPort, times(1)).getCurrentUserId();
                 verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
+                verify(categoryPersistencePort, times(1)).existsById(model.getCategory().getId());
                 verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
                 verify(persistencePort, never()).existsByNameAndRestaurantId(any(), anyLong());
                 verify(persistencePort, never()).save(any());
@@ -410,5 +429,91 @@ class DishUseCaseTest {
                 assertEquals(String.format(DomainMessagesConstants.RESTAURANT_NOT_FOUND, restaurantId),
                                 ex.getMessage());
                 verify(restaurantPersistencePort, times(1)).existsById(restaurantId);
+        }
+
+        @Test
+        void when_save_withNonExistentCategory_then_throwElementNotFoundException() {
+                // Arrange
+                when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Collections.singletonList("OWNER"));
+                when(authenticatedUserPort.getCurrentUserId()).thenReturn(1L);
+                when(persistencePort.existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L)).thenReturn(true);
+                when(categoryPersistencePort.existsById(model.getCategory().getId())).thenReturn(false);
+
+                // Act & Assert
+                ElementNotFoundException ex = assertThrows(ElementNotFoundException.class, () -> useCase.save(model));
+                assertEquals(String.format(DomainMessagesConstants.CATEGORY_NOT_FOUND, model.getCategory().getId()), ex.getMessage());
+                verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
+                verify(authenticatedUserPort, times(1)).getCurrentUserId();
+                verify(persistencePort, times(1)).existsByRestaurantIdAndOwnerId(model.getRestaurant().getId(), 1L);
+                verify(categoryPersistencePort, times(1)).existsById(model.getCategory().getId());
+                verify(validatorChain, never()).validate(any(), any());
+                verify(persistencePort, never()).existsByNameAndRestaurantId(any(), anyLong());
+                verify(persistencePort, never()).save(any());
+        }
+
+        @Test
+        void when_findAllByRestaurantId_categoryDoesNotExist_then_throwElementNotFoundException() {
+                // Arrange
+                Long restaurantId = 10L;
+                Long categoryId = 99L;
+                int page = 0;
+                int size = 10;
+                String sortBy = "name";
+                boolean orderAsc = true;
+                when(categoryPersistencePort.existsById(categoryId)).thenReturn(false);
+
+                // Act & Assert
+                ElementNotFoundException ex = assertThrows(ElementNotFoundException.class, () -> useCase
+                        .findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc));
+                assertEquals(String.format(DomainMessagesConstants.CATEGORY_NOT_FOUND, categoryId), ex.getMessage());
+                verify(categoryPersistencePort, times(1)).existsById(categoryId);
+                verify(restaurantPersistencePort, never()).existsById(anyLong());
+                verify(paginationValidatorChain, times(1)).validate(page, size, sortBy, orderAsc);
+        }
+
+        @Test
+        void when_findAllByRestaurantId_restaurantDoesNotExist_then_throwElementNotFoundException_coverage() {
+                // Arrange
+                Long restaurantId = 99L;
+                Long categoryId = 1L;
+                int page = 0;
+                int size = 10;
+                String sortBy = "name";
+                boolean orderAsc = true;
+                when(categoryPersistencePort.existsById(categoryId)).thenReturn(true);
+                when(restaurantPersistencePort.existsById(restaurantId)).thenReturn(false);
+
+                // Act & Assert
+                ElementNotFoundException ex = assertThrows(ElementNotFoundException.class, () -> useCase
+                        .findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc));
+                assertEquals(String.format(DomainMessagesConstants.RESTAURANT_NOT_FOUND, restaurantId), ex.getMessage());
+                verify(categoryPersistencePort, times(1)).existsById(categoryId);
+                verify(restaurantPersistencePort, times(1)).existsById(restaurantId);
+                verify(paginationValidatorChain, times(1)).validate(page, size, sortBy, orderAsc);
+        }
+
+        @Test
+        void when_findAllByRestaurantId_validRequest_then_returnPageInfo() {
+                // Arrange
+                Long restaurantId = 10L;
+                Long categoryId = 2L;
+                int page = 0;
+                int size = 10;
+                String sortBy = "name";
+                boolean orderAsc = true;
+                PageInfo<DishModel> pageInfo = new PageInfo<>(Collections.emptyList(), 0, 0, 0, 0, false, false);
+                when(categoryPersistencePort.existsById(categoryId)).thenReturn(true);
+                when(restaurantPersistencePort.existsById(restaurantId)).thenReturn(true);
+                when(persistencePort.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc)).thenReturn(pageInfo);
+
+                // Act
+                PageInfo<DishModel> result = useCase.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc);
+
+                // Assert
+                assertEquals(pageInfo, result);
+                verify(categoryPersistencePort, times(1)).existsById(categoryId);
+                verify(restaurantPersistencePort, times(1)).existsById(restaurantId);
+                verify(persistencePort, times(1)).findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc);
+                verify(paginationValidatorChain, times(1)).validate(page, size, sortBy, orderAsc);
         }
 }

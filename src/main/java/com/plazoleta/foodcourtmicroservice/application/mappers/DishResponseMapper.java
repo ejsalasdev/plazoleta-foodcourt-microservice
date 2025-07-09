@@ -11,5 +11,6 @@ import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 public interface DishResponseMapper {
 
     @Mapping(source = "restaurant.name", target = "restaurantName")
+    @Mapping(source = "category.name", target = "categoryName")
     DishResponse modelToResponse(DishModel dishModel);
 }

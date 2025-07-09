@@ -33,6 +33,6 @@ public class DishSpecifications {
     }
 
     public static Specification<DishEntity> categoryIdEquals(Long categoryId) {
-        return (root, query, cb) -> cb.equal(root.get(SpecificationConstants.CATEGORY_ID_FIELD), categoryId);
+        return (root, query, cb) -> cb.equal(root.get(SpecificationConstants.CATEGORY_FIELD).get(SpecificationConstants.ID_FIELD), categoryId);
     }
 }

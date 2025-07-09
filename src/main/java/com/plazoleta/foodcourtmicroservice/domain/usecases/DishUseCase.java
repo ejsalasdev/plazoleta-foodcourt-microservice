@@ -11,6 +11,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.CategoryPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
@@ -25,17 +26,20 @@ public class DishUseCase implements DishServicePort {
     private final AuthenticatedUserPort authenticatedUserPort;
     private final PaginationValidatorChain paginationValidatorChain;
     private final RestaurantPersistencePort restaurantPersistencePort;
+    private final CategoryPersistencePort categoryPersistencePort;
 
     public DishUseCase(DishPersistencePort dishPersistencePort,
             DishValidatorChain dishValidatorChain,
             AuthenticatedUserPort authenticatedUserPort,
             PaginationValidatorChain paginationValidatorChain,
-            RestaurantPersistencePort restaurantPersistencePort) {
+            RestaurantPersistencePort restaurantPersistencePort,
+            CategoryPersistencePort categoryPersistencePort) {
         this.dishPersistencePort = dishPersistencePort;
         this.dishValidatorChain = dishValidatorChain;
         this.authenticatedUserPort = authenticatedUserPort;
         this.paginationValidatorChain = paginationValidatorChain;
         this.restaurantPersistencePort = restaurantPersistencePort;
+        this.categoryPersistencePort = categoryPersistencePort;
     }
 
     @Override
@@ -49,10 +53,15 @@ public class DishUseCase implements DishServicePort {
         }
 
         Long currentUserId = authenticatedUserPort.getCurrentUserId();
-        Long restaurantId = dishModel.getRestaurant() != null ? dishModel.getRestaurant().getId() : null;
+        Long restaurantId = dishModel.getRestaurant().getId();
 
         if (!dishPersistencePort.existsByRestaurantIdAndOwnerId(restaurantId, currentUserId)) {
             throw new UnauthorizedOperationException(DomainMessagesConstants.USER_NOT_OWNER_OF_RESTAURANT);
+        }
+
+        if (!categoryPersistencePort.existsById(dishModel.getCategory().getId())) {
+            throw new ElementNotFoundException(
+                    String.format(DomainMessagesConstants.CATEGORY_NOT_FOUND, dishModel.getCategory().getId()));
         }
 
         dishValidatorChain.validate(dishModel, OperationType.CREATE);
@@ -121,10 +130,18 @@ public class DishUseCase implements DishServicePort {
     }
 
     @Override
-    public PageInfo<DishModel> findAllByRestaurantId(Long restaurantId, Long categoryId, Integer page, Integer size, String sortBy, boolean orderAsc) {
+    public PageInfo<DishModel> findAllByRestaurantId(Long restaurantId, Long categoryId, Integer page, Integer size,
+            String sortBy, boolean orderAsc) {
         paginationValidatorChain.validate(page, size, sortBy, orderAsc);
+
+        if (!categoryPersistencePort.existsById(categoryId)) {
+            throw new ElementNotFoundException(
+                    String.format(DomainMessagesConstants.CATEGORY_NOT_FOUND, categoryId));
+        }
+
         if (!restaurantPersistencePort.existsById(restaurantId)) {
-            throw new ElementNotFoundException(String.format(DomainMessagesConstants.RESTAURANT_NOT_FOUND, restaurantId));
+            throw new ElementNotFoundException(
+                    String.format(DomainMessagesConstants.RESTAURANT_NOT_FOUND, restaurantId));
         }
         return dishPersistencePort.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc);
     }

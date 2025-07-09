@@ -8,6 +8,7 @@ public final class SpecificationConstants {
     public static final String NAME_FIELD = "name";
     public static final String OWNER_ID_FIELD = "ownerId";
     public static final String CATEGORY_ID_FIELD = "categoryId";
+    public static final String CATEGORY_FIELD = "category";
 
     private SpecificationConstants() {
         throw new IllegalStateException("Utility class");

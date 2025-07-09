@@ -9,6 +9,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.CategoryPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.DishUseCase;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
@@ -46,11 +47,13 @@ public class DishBeanConfiguration {
             DishValidatorChain dishValidatorChain,
             AuthenticatedUserPort authenticatedUserPort,
             PaginationValidatorChain dishPaginationValidatorChain,
-            RestaurantPersistencePort restaurantPersistencePort) {
+            RestaurantPersistencePort restaurantPersistencePort,
+            CategoryPersistencePort categoryPersistencePort) {
         return new DishUseCase(dishPersistencePort,
                 dishValidatorChain,
                 authenticatedUserPort,
                 dishPaginationValidatorChain,
-                restaurantPersistencePort);
+                restaurantPersistencePort,
+                categoryPersistencePort);
     }
 }
