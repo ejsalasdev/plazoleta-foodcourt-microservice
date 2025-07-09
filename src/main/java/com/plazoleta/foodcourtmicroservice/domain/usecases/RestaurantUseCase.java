@@ -10,6 +10,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 
 public class RestaurantUseCase implements RestaurantServicePort {
@@ -53,6 +54,11 @@ public class RestaurantUseCase implements RestaurantServicePort {
         }
 
         restaurantPersistencePort.save(restaurantModel);
+    }
+
+    @Override
+    public PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc) {
+        return restaurantPersistencePort.findAll(page, size, sortBy, orderAsc);
     }
 
 }
