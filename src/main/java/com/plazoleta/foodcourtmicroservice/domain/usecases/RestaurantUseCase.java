@@ -12,6 +12,8 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperati
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
+import java.util.Set;
 
 public class RestaurantUseCase implements RestaurantServicePort {
 
@@ -19,15 +21,18 @@ public class RestaurantUseCase implements RestaurantServicePort {
     private final RestaurantValidatorChain restaurantValidatorChain;
     private final UserServicePort userServicePort;
     private final AuthenticatedUserPort authenticatedUserPort;
+    private final PaginationValidatorChain paginationValidatorChain;
 
     public RestaurantUseCase(RestaurantPersistencePort restaurantPersistencePort,
-            RestaurantValidatorChain restaurantValidatorChain,
-            UserServicePort userServicePort,
-            AuthenticatedUserPort authenticatedUserPort) {
+                             RestaurantValidatorChain restaurantValidatorChain,
+                             UserServicePort userServicePort,
+                             AuthenticatedUserPort authenticatedUserPort) {
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.restaurantValidatorChain = restaurantValidatorChain;
         this.userServicePort = userServicePort;
         this.authenticatedUserPort = authenticatedUserPort;
+        // Only allow sorting by name for restaurants
+        this.paginationValidatorChain = new PaginationValidatorChain(Set.of("name"));
     }
 
     @Override
@@ -58,6 +63,7 @@ public class RestaurantUseCase implements RestaurantServicePort {
 
     @Override
     public PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc) {
+        paginationValidatorChain.validate(page, size, sortBy, orderAsc);
         return restaurantPersistencePort.findAll(page, size, sortBy, orderAsc);
     }
 
