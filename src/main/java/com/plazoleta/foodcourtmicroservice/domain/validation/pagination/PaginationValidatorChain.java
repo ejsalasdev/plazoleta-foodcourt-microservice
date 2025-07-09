@@ -8,6 +8,7 @@ import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.impl.Pag
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.impl.SortByValidator;
 
 public class PaginationValidatorChain {
+    
     private final PaginationValidator chain;
 
     public PaginationValidatorChain(Set<String> allowedSortFields) {
