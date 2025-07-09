@@ -31,6 +31,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
@@ -40,6 +41,7 @@ class DishUseCaseTest {
         return new RestaurantModel(id, "Restaurante Prueba", "NIT123", "Calle 1", "123456789",
                 "https://logo.com/logo.jpg", 1L);
     }
+
 
     @Mock
     private DishPersistencePort persistencePort;
@@ -53,6 +55,9 @@ class DishUseCaseTest {
     @Mock
     private PaginationValidatorChain paginationValidatorChain;
 
+    @Mock
+    private RestaurantPersistencePort restaurantPersistencePort;
+
     @InjectMocks
     private DishUseCase useCase;
 
@@ -63,7 +68,7 @@ class DishUseCaseTest {
         MockitoAnnotations.openMocks(this);
         model = new DishModel(1L, "Hamburguesa", new BigDecimal("15000.00"), "Clásica hamburguesa",
                 "https://img.com/hamburguesa.jpg", 2L, buildRestaurant(10L), true);
-        useCase = new DishUseCase(persistencePort, validatorChain, authenticatedUserPort, paginationValidatorChain);
+        useCase = new DishUseCase(persistencePort, validatorChain, authenticatedUserPort, paginationValidatorChain, restaurantPersistencePort);
     }
 
     @Test

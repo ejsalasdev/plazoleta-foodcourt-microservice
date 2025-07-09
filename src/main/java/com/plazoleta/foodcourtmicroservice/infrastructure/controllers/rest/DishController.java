@@ -84,6 +84,7 @@ public class DishController {
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Dishes retrieved successfully"),
                         @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Restaurant not found", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
         })
         @GetMapping("/restaurant/{restaurantId}")

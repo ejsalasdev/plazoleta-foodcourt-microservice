@@ -12,6 +12,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.DishServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.dish.DishValidatorChain;
@@ -23,15 +24,18 @@ public class DishUseCase implements DishServicePort {
     private final DishValidatorChain dishValidatorChain;
     private final AuthenticatedUserPort authenticatedUserPort;
     private final PaginationValidatorChain paginationValidatorChain;
+    private final RestaurantPersistencePort restaurantPersistencePort;
 
     public DishUseCase(DishPersistencePort dishPersistencePort,
             DishValidatorChain dishValidatorChain,
             AuthenticatedUserPort authenticatedUserPort,
-            PaginationValidatorChain paginationValidatorChain) {
+            PaginationValidatorChain paginationValidatorChain,
+            RestaurantPersistencePort restaurantPersistencePort) {
         this.dishPersistencePort = dishPersistencePort;
         this.dishValidatorChain = dishValidatorChain;
         this.authenticatedUserPort = authenticatedUserPort;
         this.paginationValidatorChain = paginationValidatorChain;
+        this.restaurantPersistencePort = restaurantPersistencePort;
     }
 
     @Override
@@ -119,6 +123,9 @@ public class DishUseCase implements DishServicePort {
     @Override
     public PageInfo<DishModel> findAllByRestaurantId(Long restaurantId, Long categoryId, Integer page, Integer size, String sortBy, boolean orderAsc) {
         paginationValidatorChain.validate(page, size, sortBy, orderAsc);
+        if (!restaurantPersistencePort.existsById(restaurantId)) {
+            throw new ElementNotFoundException(String.format(DomainMessagesConstants.RESTAURANT_NOT_FOUND, restaurantId));
+        }
         return dishPersistencePort.findAllByRestaurantId(restaurantId, categoryId, page, size, sortBy, orderAsc);
     }
 }

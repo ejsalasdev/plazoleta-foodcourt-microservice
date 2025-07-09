@@ -9,5 +9,7 @@ public interface RestaurantPersistencePort {
 
     boolean existsByNit(String nit);
 
+    boolean existsById(Long id);
+
     PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc);
 }

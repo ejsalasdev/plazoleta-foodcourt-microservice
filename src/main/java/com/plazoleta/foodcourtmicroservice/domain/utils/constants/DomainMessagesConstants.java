@@ -15,6 +15,8 @@ public final class DomainMessagesConstants {
     public static final String RESTAURANT_NAME_REQUIRED = "Restaurant name is required.";
     public static final String RESTAURANT_NAME_NUMERIC = "Restaurant name cannot be only numbers.";
 
+    public static final String RESTAURANT_NOT_FOUND = "Restaurant with id %d does not exist.";
+
     public static final String NAME_ONLY_NUMBERS_REGEX = "\\d+";
     public static final String NIT_NUMERIC_REGEX = "\\d+";
     public static final String PHONE_REGEX = "^\\+?\\d+$";
