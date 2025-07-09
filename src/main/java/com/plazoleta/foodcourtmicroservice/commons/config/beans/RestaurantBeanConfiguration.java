@@ -1,5 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.commons.config.beans;
 
+import java.util.Set;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,6 +11,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPor
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.RestaurantUseCase;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.external.UserServiceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence.RestaurantPersistenceAdapter;
@@ -41,16 +44,23 @@ public class RestaurantBeanConfiguration {
     }
 
     @Bean
+    public PaginationValidatorChain paginationValidatorChain() {
+        return new PaginationValidatorChain(Set.of("name"));
+    }
+
+    @Bean
     public RestaurantServicePort restaurantServicePort(
             RestaurantPersistencePort restaurantPersistencePort,
             RestaurantValidatorChain restaurantValidatorChain,
             UserServicePort userServicePort,
-            AuthenticatedUserPort authenticatedUserPort) {
+            AuthenticatedUserPort authenticatedUserPort,
+            PaginationValidatorChain paginationValidatorChain) {
         return new RestaurantUseCase(
                 restaurantPersistencePort,
                 restaurantValidatorChain,
                 userServicePort,
-                authenticatedUserPort);
+                authenticatedUserPort,
+                paginationValidatorChain);
     }
 
 }

@@ -3,14 +3,18 @@ package com.plazoleta.foodcourtmicroservice.infrastructure.controllers.rest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.SaveRestaurantRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.RestaurantResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.SaveRestaurantResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.RestaurantHandler;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,5 +45,20 @@ public class RestaurantController {
     @PostMapping("/")
     public ResponseEntity<SaveRestaurantResponse> save(@RequestBody SaveRestaurantRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(restaurantHandler.save(request));
+    }
+
+    @Operation(summary = "List all restaurants", description = "Returns a paginated list of all restaurants sorted alphabetically by name.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Restaurants retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+    })
+    @GetMapping("/")
+    public ResponseEntity<PageInfo<RestaurantResponse>> findAll(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "true") boolean orderAsc) {
+        return ResponseEntity.ok(restaurantHandler.findAll(page, size, sortBy, orderAsc));
     }
 }

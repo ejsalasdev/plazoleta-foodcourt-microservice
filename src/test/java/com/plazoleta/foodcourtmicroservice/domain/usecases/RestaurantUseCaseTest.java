@@ -9,6 +9,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,12 +20,13 @@ import org.mockito.MockitoAnnotations;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementAlreadyExistsException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 import com.plazoleta.foodcourtmicroservice.domain.validation.restaurant.RestaurantValidatorChain;
 
 class RestaurantUseCaseTest {
@@ -37,9 +40,11 @@ class RestaurantUseCaseTest {
     @Mock
     private UserServicePort userServicePort;
 
-
     @Mock
     private AuthenticatedUserPort authenticatedUserPort;
+
+    @Mock
+    private PaginationValidatorChain paginationValidatorChain;
 
     @InjectMocks
     private RestaurantUseCase useCase;
@@ -50,13 +55,14 @@ class RestaurantUseCaseTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         model = new RestaurantModel(1L, "Pizza Place", "123456789", "Street 1", "+573001234567", "logo.png", 10L);
-        useCase = new RestaurantUseCase(persistencePort, validatorChain, userServicePort, authenticatedUserPort);
+        useCase = new RestaurantUseCase(persistencePort, validatorChain, userServicePort, authenticatedUserPort,
+                paginationValidatorChain);
     }
 
     @Test
     void when_save_withValidRestaurantAndAdminUser_then_restaurantIsSaved() {
         // Arrange
-        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(java.util.Arrays.asList("ADMIN"));
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Arrays.asList("ADMIN"));
         when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("OWNER");
         when(persistencePort.existsByNit(model.getNit())).thenReturn(false);
 
@@ -72,10 +78,11 @@ class RestaurantUseCaseTest {
     @Test
     void when_save_withNonAdminUser_then_throwUnauthorizedOperationException() {
         // Arrange
-        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(java.util.Arrays.asList("OWNER"));
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Arrays.asList("OWNER"));
 
         // Act & Assert
-        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class, () -> useCase.save(model));
+        UnauthorizedOperationException ex = assertThrows(UnauthorizedOperationException.class,
+                () -> useCase.save(model));
         assertEquals(DomainMessagesConstants.USER_NOT_AUTHORIZED_TO_CREATE_RESTAURANT, ex.getMessage());
         verify(validatorChain, times(1)).validate(model, OperationType.CREATE);
         verify(authenticatedUserPort, times(1)).getCurrentUserRoles();
@@ -99,7 +106,7 @@ class RestaurantUseCaseTest {
     @Test
     void when_save_withNonOwnerRole_andAdminUser_then_throwInvalidOwnerException() {
         // Arrange
-        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(java.util.Arrays.asList("ADMIN"));
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Arrays.asList("ADMIN"));
         when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("ADMIN");
 
         // Act & Assert
@@ -115,7 +122,7 @@ class RestaurantUseCaseTest {
     @Test
     void when_save_withExistingNit_andAdminUser_then_throwElementAlreadyExistsException() {
         // Arrange
-        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(java.util.Arrays.asList("ADMIN"));
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(Arrays.asList("ADMIN"));
         when(userServicePort.getUserRoleById(model.getOwnerId())).thenReturn("OWNER");
         when(persistencePort.existsByNit(model.getNit())).thenReturn(true);
 
