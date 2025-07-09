@@ -22,6 +22,9 @@ jwt:
   
   # Uncomment the following lines to enable debug logging
 
-#logging:
-#  level:
-#    root: debug
+logging:
+ level:
+   root: debug
+
+user-microservice:
+  url: http://localhost:8091
