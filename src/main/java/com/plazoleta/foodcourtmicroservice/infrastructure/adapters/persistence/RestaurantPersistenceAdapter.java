@@ -68,5 +68,10 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
                 restaurantEntityPage.hasPrevious()
         );
     }
-
+    
+    @Override
+    public Optional<RestaurantModel> findRestaurantByOwnerId(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId)
+                .map(restaurantEntityMapper::entityToModel);
+    }
 }

@@ -58,6 +58,9 @@ public final class DomainMessagesConstants {
     public static final String ORDER_DISH_NOT_ACTIVE = "Cannot order inactive dishes.";
     public static final String RESTAURANT_NOT_FOUND_MESSAGE = "Restaurant not found.";
     public static final String DISH_NOT_FOUND_MESSAGE = "Dish not found.";
+    public static final String EMPLOYEE_NOT_AUTHORIZED = "User is not authorized to access this resource. Only employees can list orders.";
+    public static final String EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT = "Employee is not associated with any restaurant.";
+    public static final String EMPLOYEE_ROLE = "EMPLOYEE";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");

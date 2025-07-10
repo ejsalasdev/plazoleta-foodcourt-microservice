@@ -247,6 +247,180 @@ class OrderUseCaseTest {
         verify(dishPersistencePort, times(1)).findDishById(dish2.getId());
         verify(orderPersistencePort, times(1)).saveOrder(any(OrderModel.class));
     }
+    
+    // Tests for getOrdersByRestaurantAndStatus method
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithValidEmployeeAndStatus_Expect_PagedOrdersReturned() {
+        // Arrange
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = 0;
+        Integer size = 10;
+        Long restaurantId = 1L;
+        
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+        OrderModel order = buildSavedOrder(1L, 456L, testRestaurant, List.of(orderDish));
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size))
+                .thenReturn(createPageInfo(List.of(order), 1, 1, page, size));
+        
+        // Act
+        var result = orderUseCase.getOrdersByRestaurantAndStatus(status, page, size);
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getContent().size());
+        assertEquals(order.getId(), result.getContent().get(0).getId());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(orderPersistencePort).findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
+    }
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithNonEmployeeRole_Expect_CustomOrderException() {
+        // Arrange
+        List<String> roles = List.of("CUSTOMER");
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = 0;
+        Integer size = 10;
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
+                orderUseCase.getOrdersByRestaurantAndStatus(status, page, size));
+        
+        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED, exception.getMessage());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort, never()).getCurrentUserId();
+        verify(restaurantPersistencePort, never()).findRestaurantByOwnerId(anyLong());
+        verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
+    }
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithEmployeeNotAssociatedWithRestaurant_Expect_CustomOrderException() {
+        // Arrange
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = 0;
+        Integer size = 10;
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.empty());
+        
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
+                orderUseCase.getOrdersByRestaurantAndStatus(status, page, size));
+        
+        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT, exception.getMessage());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
+    }
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithInvalidPageNumber_Expect_CustomOrderException() {
+        // Arrange
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = -1; // Invalid page number
+        Integer size = 10;
+        Long restaurantId = 1L;
+        
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
+                orderUseCase.getOrdersByRestaurantAndStatus(status, page, size));
+        
+        assertEquals(DomainMessagesConstants.PAGINATION_PAGE_NUMBER_INVALID, exception.getMessage());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
+    }
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithInvalidPageSize_Expect_CustomOrderException() {
+        // Arrange
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = 0;
+        Integer size = 0; // Invalid page size
+        Long restaurantId = 1L;
+        
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
+                orderUseCase.getOrdersByRestaurantAndStatus(status, page, size));
+        
+        assertEquals(DomainMessagesConstants.PAGINATION_PAGE_SIZE_INVALID, exception.getMessage());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
+    }
+    
+    @Test
+    void when_GetOrdersByRestaurantAndStatus_WithValidParametersAndEmptyResult_Expect_EmptyPagedResponse() {
+        // Arrange
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+        OrderStatusEnum status = OrderStatusEnum.PENDING;
+        Integer page = 0;
+        Integer size = 10;
+        Long restaurantId = 1L;
+        
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size))
+                .thenReturn(createPageInfo(List.of(), 0, 0, page, size));
+        
+        // Act
+        var result = orderUseCase.getOrdersByRestaurantAndStatus(status, page, size);
+        
+        // Assert
+        assertNotNull(result);
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getContent().size());
+        
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(orderPersistencePort).findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
+    }
 
     // Helper methods for building test data
     private RestaurantModel buildRestaurant(Long id) {
@@ -295,5 +469,13 @@ class OrderUseCaseTest {
         order.setRestaurant(restaurant);
         order.setOrderDishes(new ArrayList<>(orderDishes));
         return order;
+    }
+    
+    private com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo<OrderModel> createPageInfo(
+            List<OrderModel> content, long totalElements, int totalPages, int currentPage, int pageSize) {
+        boolean hasNext = currentPage < totalPages - 1;
+        boolean hasPrevious = currentPage > 0;
+        return new com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo<>(
+                content, totalElements, totalPages, currentPage, pageSize, hasNext, hasPrevious);
     }
 }

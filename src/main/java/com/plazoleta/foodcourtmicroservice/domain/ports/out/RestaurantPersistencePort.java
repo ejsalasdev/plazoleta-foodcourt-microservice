@@ -16,4 +16,6 @@ public interface RestaurantPersistencePort {
     Optional<RestaurantModel> findRestaurantById(Long id);
 
     PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc);
+    
+    Optional<RestaurantModel> findRestaurantByOwnerId(Long ownerId);
 }

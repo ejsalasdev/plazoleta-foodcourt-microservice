@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Service;
-
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomOrderException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomerHasActiveOrderException;
@@ -21,17 +19,25 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 
-import lombok.RequiredArgsConstructor;
 
-@Service
-@RequiredArgsConstructor
 public class OrderUseCase implements OrderServicePort {
 
     private final OrderPersistencePort orderPersistencePort;
     private final RestaurantPersistencePort restaurantPersistencePort;
     private final DishPersistencePort dishPersistencePort;
     private final AuthenticatedUserPort authenticatedUserPort;
+
+    public OrderUseCase(OrderPersistencePort orderPersistencePort,
+                        RestaurantPersistencePort restaurantPersistencePort,
+                        DishPersistencePort dishPersistencePort,
+                        AuthenticatedUserPort authenticatedUserPort) {
+        this.orderPersistencePort = orderPersistencePort;
+        this.restaurantPersistencePort = restaurantPersistencePort;
+        this.dishPersistencePort = dishPersistencePort;
+        this.authenticatedUserPort = authenticatedUserPort;
+    }
 
     @Override
     public OrderModel createOrder(OrderModel orderModel) {
@@ -77,5 +83,37 @@ public class OrderUseCase implements OrderServicePort {
         orderModel.setOrderDishes(validatedOrderDishes);
 
         return orderPersistencePort.saveOrder(orderModel);
+    }
+
+    @Override
+    public PageInfo<OrderModel> getOrdersByRestaurantAndStatus(OrderStatusEnum status, Integer page, Integer size) {
+        // Validate that current user is an employee
+        List<String> userRoles = authenticatedUserPort.getCurrentUserRoles();
+        if (!userRoles.contains(DomainMessagesConstants.EMPLOYEE_ROLE)) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED);
+        }
+
+        Long currentUserId = authenticatedUserPort.getCurrentUserId();
+        
+        // Find the restaurant where the employee works
+        // For this implementation, we assume that employees are associated with restaurants 
+        // through the ownerId field (employee is the owner/manager of the restaurant)
+        Optional<RestaurantModel> employeeRestaurant = restaurantPersistencePort.findRestaurantByOwnerId(currentUserId);
+        
+        if (employeeRestaurant.isEmpty()) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
+        }
+
+        Long restaurantId = employeeRestaurant.get().getId();
+        
+        // Validate pagination parameters
+        if (page < 0) {
+            throw new CustomOrderException(DomainMessagesConstants.PAGINATION_PAGE_NUMBER_INVALID);
+        }
+        if (size <= 0) {
+            throw new CustomOrderException(DomainMessagesConstants.PAGINATION_PAGE_SIZE_INVALID);
+        }
+
+        return orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
     }
 }
