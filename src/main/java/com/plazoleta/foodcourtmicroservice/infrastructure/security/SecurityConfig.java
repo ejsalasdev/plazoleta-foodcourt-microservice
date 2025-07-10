@@ -30,6 +30,7 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs*/**").permitAll();
                     http.requestMatchers(HttpMethod.POST, "/api/v1/restaurant/").hasAuthority("ADMIN");
                     http.requestMatchers(HttpMethod.GET, "/api/v1/restaurant/").hasAuthority("CUSTOMER");
+                    http.requestMatchers(HttpMethod.GET, "/api/v1/restaurant/owner/{ownerId}").permitAll();
                     http.requestMatchers(HttpMethod.POST, "/api/v1/dish/").hasAuthority("OWNER");
                     http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}").hasAuthority("OWNER");
                     http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}/active").hasAuthority("OWNER");
