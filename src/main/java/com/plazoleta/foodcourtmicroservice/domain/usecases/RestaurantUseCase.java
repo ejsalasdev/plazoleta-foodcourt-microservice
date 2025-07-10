@@ -66,4 +66,9 @@ public class RestaurantUseCase implements RestaurantServicePort {
         return restaurantPersistencePort.findAll(page, size, sortBy, orderAsc);
     }
 
+    @Override
+    public RestaurantModel findByOwnerId(Long ownerId) {
+        return restaurantPersistencePort.findByOwnerId(ownerId);
+    }
+
 }

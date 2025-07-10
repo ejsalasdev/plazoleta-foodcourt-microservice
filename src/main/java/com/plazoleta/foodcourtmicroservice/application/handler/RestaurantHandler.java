@@ -11,4 +11,6 @@ public interface RestaurantHandler {
 
     PageInfo<RestaurantResponse> findAll(Integer page, Integer size, String sortBy, boolean orderAsc);
 
+    RestaurantResponse getRestaurantByOwnerId(Long ownerId);
+
 }
