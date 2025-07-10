@@ -52,6 +52,13 @@ public final class DomainMessagesConstants {
     public static final String PAGINATION_PAGE_SIZE_INVALID = "Page size must be greater than 0.";
     public static final String PAGINATION_SORTBY_INVALID = "Invalid sortBy field: %s";
 
+    // Order messages
+    public static final String ORDER_CUSTOMER_HAS_ACTIVE_ORDER = "Customer already has an active order. Only one order can be in process at a time.";
+    public static final String ORDER_DISH_DIFFERENT_RESTAURANT = "All dishes in an order must belong to the same restaurant.";
+    public static final String ORDER_DISH_NOT_ACTIVE = "Cannot order inactive dishes.";
+    public static final String RESTAURANT_NOT_FOUND_MESSAGE = "Restaurant not found.";
+    public static final String DISH_NOT_FOUND_MESSAGE = "Dish not found.";
+
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");
     }
