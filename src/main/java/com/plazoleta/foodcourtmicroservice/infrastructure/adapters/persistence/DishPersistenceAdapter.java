@@ -2,6 +2,7 @@ package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +29,12 @@ public class DishPersistenceAdapter implements DishPersistencePort {
     @Override
     public void save(DishModel dishModel) {
         dishRepository.save(dishEntityMapper.modelToEntity(dishModel));
+    }
+
+    @Override
+    public Optional<DishModel> findDishById(Long dishId) {
+        return dishRepository.findById(dishId)
+                .map(dishEntityMapper::entityToModel);
     }
 
     @Override

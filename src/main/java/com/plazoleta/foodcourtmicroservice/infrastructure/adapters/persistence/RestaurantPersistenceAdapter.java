@@ -1,6 +1,7 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +36,12 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
     @Override
     public boolean existsById(Long id) {
         return restaurantRepository.existsById(id);
+    }
+
+    @Override
+    public Optional<RestaurantModel> findRestaurantById(Long id) {
+        return restaurantRepository.findById(id)
+                .map(restaurantEntityMapper::entityToModel);
     }
 
     @Override
