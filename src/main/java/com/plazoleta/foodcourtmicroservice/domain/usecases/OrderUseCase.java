@@ -21,6 +21,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistenc
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
+import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
 
 public class OrderUseCase implements OrderServicePort {
@@ -30,17 +31,20 @@ public class OrderUseCase implements OrderServicePort {
     private final DishPersistencePort dishPersistencePort;
     private final AuthenticatedUserPort authenticatedUserPort;
     private final UserServicePort userServicePort;
+    private final PaginationValidatorChain paginationValidatorChain;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
                         RestaurantPersistencePort restaurantPersistencePort,
                         DishPersistencePort dishPersistencePort,
                         AuthenticatedUserPort authenticatedUserPort,
-                        UserServicePort userServicePort) {
+                        UserServicePort userServicePort,
+                        PaginationValidatorChain paginationValidatorChain) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.dishPersistencePort = dishPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
         this.userServicePort = userServicePort;
+        this.paginationValidatorChain = paginationValidatorChain;
     }
 
     @Override
@@ -91,7 +95,8 @@ public class OrderUseCase implements OrderServicePort {
 
     @Override
     public PageInfo<OrderModel> getOrdersByRestaurantAndStatus(OrderStatusEnum status, Integer page, Integer size) {
-        // Validate that current user is an employee
+        paginationValidatorChain.validate(page, size);
+
         List<String> userRoles = authenticatedUserPort.getCurrentUserRoles();
         if (!userRoles.contains(DomainMessagesConstants.EMPLOYEE_ROLE)) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED);
@@ -99,19 +104,10 @@ public class OrderUseCase implements OrderServicePort {
 
         Long currentUserId = authenticatedUserPort.getCurrentUserId();
         
-        // Get the restaurant ID associated with the employee from user microservice
         Long restaurantId = userServicePort.getUserRestaurantId(currentUserId);
         
         if (restaurantId == null) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
-        }
-        
-        // Validate pagination parameters
-        if (page < 0) {
-            throw new CustomOrderException(DomainMessagesConstants.PAGINATION_PAGE_NUMBER_INVALID);
-        }
-        if (size <= 0) {
-            throw new CustomOrderException(DomainMessagesConstants.PAGINATION_PAGE_SIZE_INVALID);
         }
 
         return orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);

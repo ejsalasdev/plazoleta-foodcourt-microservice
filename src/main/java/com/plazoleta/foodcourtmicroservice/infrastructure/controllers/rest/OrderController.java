@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
-import com.plazoleta.foodcourtmicroservice.application.dto.response.PagedOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
+import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptionhandler.ExceptionResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,18 +54,18 @@ public class OrderController {
         @GetMapping
         @Operation(summary = "Get orders by status", description = "Retrieves a paginated list of orders filtered by status for the authenticated employee's restaurant")
         @ApiResponses(value = {
-                        @ApiResponse(responseCode = "200", description = "Orders retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PagedOrderResponse.class))),
+                        @ApiResponse(responseCode = "200", description = "Orders retrieved successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageInfo.class))),
                         @ApiResponse(responseCode = "400", description = "Invalid request parameters", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "403", description = "Forbidden - User does not have EMPLOYEE role", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "404", description = "Employee not associated with any restaurant", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
                         @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
         })
-        public ResponseEntity<PagedOrderResponse> getOrdersByStatus(
+        public ResponseEntity<PageInfo<OrderResponse>> getOrdersByStatus(
                         @Parameter(description = "Order status to filter by", required = true, example = "PENDING") @RequestParam OrderStatusEnum status,
                         @Parameter(description = "Page number (0-based)", example = "0") @RequestParam(defaultValue = "0") Integer page,
                         @Parameter(description = "Number of elements per page", example = "10") @RequestParam(defaultValue = "10") Integer size) {
-                PagedOrderResponse response = orderHandler.getOrdersByStatus(status, page, size);
+                PageInfo<OrderResponse> response = orderHandler.getOrdersByStatus(status, page, size);
                 return ResponseEntity.ok(response);
         }
 }

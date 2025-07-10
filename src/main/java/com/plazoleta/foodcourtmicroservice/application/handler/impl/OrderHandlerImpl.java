@@ -2,7 +2,6 @@ package com.plazoleta.foodcourtmicroservice.application.handler.impl;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
-import com.plazoleta.foodcourtmicroservice.application.dto.response.PagedOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.application.mappers.OrderRequestMapper;
 import com.plazoleta.foodcourtmicroservice.application.mappers.OrderResponseMapper;
@@ -32,14 +31,14 @@ public class OrderHandlerImpl implements OrderHandler {
     }
     
     @Override
-    public PagedOrderResponse getOrdersByStatus(OrderStatusEnum status, Integer page, Integer size) {
+    public PageInfo<OrderResponse> getOrdersByStatus(OrderStatusEnum status, Integer page, Integer size) {
         PageInfo<OrderModel> orderPage = orderServicePort.getOrdersByRestaurantAndStatus(status, page, size);
         
         List<OrderResponse> orderResponses = orderPage.getContent().stream()
                 .map(orderResponseMapper::modelToResponse)
                 .toList();
         
-        return new PagedOrderResponse(
+        return new PageInfo<>(
                 orderResponses,
                 orderPage.getTotalElements(),
                 orderPage.getTotalPages(),
