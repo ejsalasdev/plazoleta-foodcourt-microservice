@@ -18,6 +18,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPor
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 
@@ -28,15 +29,18 @@ public class OrderUseCase implements OrderServicePort {
     private final RestaurantPersistencePort restaurantPersistencePort;
     private final DishPersistencePort dishPersistencePort;
     private final AuthenticatedUserPort authenticatedUserPort;
+    private final UserServicePort userServicePort;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
                         RestaurantPersistencePort restaurantPersistencePort,
                         DishPersistencePort dishPersistencePort,
-                        AuthenticatedUserPort authenticatedUserPort) {
+                        AuthenticatedUserPort authenticatedUserPort,
+                        UserServicePort userServicePort) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.dishPersistencePort = dishPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
+        this.userServicePort = userServicePort;
     }
 
     @Override
@@ -95,16 +99,12 @@ public class OrderUseCase implements OrderServicePort {
 
         Long currentUserId = authenticatedUserPort.getCurrentUserId();
         
-        // Find the restaurant where the employee works
-        // For this implementation, we assume that employees are associated with restaurants 
-        // through the ownerId field (employee is the owner/manager of the restaurant)
-        Optional<RestaurantModel> employeeRestaurant = restaurantPersistencePort.findRestaurantByOwnerId(currentUserId);
+        // Get the restaurant ID associated with the employee from user microservice
+        Long restaurantId = userServicePort.getUserRestaurantId(currentUserId);
         
-        if (employeeRestaurant.isEmpty()) {
+        if (restaurantId == null) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
         }
-
-        Long restaurantId = employeeRestaurant.get().getId();
         
         // Validate pagination parameters
         if (page < 0) {

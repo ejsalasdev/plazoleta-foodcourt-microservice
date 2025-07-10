@@ -9,4 +9,6 @@ public interface RestaurantServicePort {
 
     PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc);
 
+    RestaurantModel findByOwnerId(Long ownerId);
+
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
@@ -73,5 +74,12 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
     public Optional<RestaurantModel> findRestaurantByOwnerId(Long ownerId) {
         return restaurantRepository.findByOwnerId(ownerId)
                 .map(restaurantEntityMapper::entityToModel);
+    }
+
+    @Override
+    public RestaurantModel findByOwnerId(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId)
+                .map(restaurantEntityMapper::entityToModel)
+                .orElseThrow(() -> new ElementNotFoundException("Restaurant not found for owner ID: " + ownerId));
     }
 }

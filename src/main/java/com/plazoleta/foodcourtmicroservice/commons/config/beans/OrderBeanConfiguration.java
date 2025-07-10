@@ -8,6 +8,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPor
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.OrderUseCase;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence.OrderPersistenceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.OrderEntityMapper;
@@ -31,10 +32,12 @@ public class OrderBeanConfiguration {
     public OrderServicePort orderServicePort(OrderPersistencePort orderPersistencePort,
             RestaurantPersistencePort restaurantPersistencePort,
             DishPersistencePort dishPersistencePort,
-            AuthenticatedUserPort authenticatedUserPort) {
+            AuthenticatedUserPort authenticatedUserPort,
+            UserServicePort userServicePort) {
         return new OrderUseCase(orderPersistencePort,
                 restaurantPersistencePort,
                 dishPersistencePort,
-                authenticatedUserPort);
+                authenticatedUserPort,
+                userServicePort);
     }
 }

@@ -35,6 +35,7 @@ import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPor
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 
 class OrderUseCaseTest {
@@ -50,6 +51,9 @@ class OrderUseCaseTest {
 
     @Mock
     private AuthenticatedUserPort authenticatedUserPort;
+
+    @Mock
+    private UserServicePort userServicePort;
 
     @InjectMocks
     private OrderUseCase orderUseCase;
@@ -268,7 +272,7 @@ class OrderUseCaseTest {
         
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
         when(orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size))
                 .thenReturn(createPageInfo(List.of(order), 1, 1, page, size));
         
@@ -283,7 +287,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
-        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(userServicePort).getUserRestaurantId(employeeId);
         verify(orderPersistencePort).findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
     }
     
@@ -305,7 +309,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort, never()).getCurrentUserId();
-        verify(restaurantPersistencePort, never()).findRestaurantByOwnerId(anyLong());
+        verify(userServicePort, never()).getUserRestaurantId(anyLong());
         verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
     }
     
@@ -320,7 +324,7 @@ class OrderUseCaseTest {
         
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.empty());
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(null);
         
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
@@ -330,7 +334,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
-        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(userServicePort).getUserRestaurantId(employeeId);
         verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
     }
     
@@ -344,11 +348,9 @@ class OrderUseCaseTest {
         Integer size = 10;
         Long restaurantId = 1L;
         
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
         
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
@@ -358,7 +360,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
-        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(userServicePort).getUserRestaurantId(employeeId);
         verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
     }
     
@@ -372,11 +374,9 @@ class OrderUseCaseTest {
         Integer size = 0; // Invalid page size
         Long restaurantId = 1L;
         
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
         
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class, () -> 
@@ -386,7 +386,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
-        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(userServicePort).getUserRestaurantId(employeeId);
         verify(orderPersistencePort, never()).findOrdersByRestaurantIdAndStatus(anyLong(), any(), any(), any());
     }
     
@@ -400,11 +400,9 @@ class OrderUseCaseTest {
         Integer size = 10;
         Long restaurantId = 1L;
         
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(restaurantPersistencePort.findRestaurantByOwnerId(employeeId)).thenReturn(Optional.of(testRestaurant));
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
         when(orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size))
                 .thenReturn(createPageInfo(List.of(), 0, 0, page, size));
         
@@ -418,7 +416,7 @@ class OrderUseCaseTest {
         
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
-        verify(restaurantPersistencePort).findRestaurantByOwnerId(employeeId);
+        verify(userServicePort).getUserRestaurantId(employeeId);
         verify(orderPersistencePort).findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
     }
 
