@@ -663,8 +663,6 @@ class OrderUseCaseTest {
         verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
-    // ==================== TESTS FOR markOrderAsReady (HU#14) ====================
-
     @Test
     void when_MarkOrderAsReady_Expect_Success() {
         // Arrange
@@ -821,5 +819,224 @@ class OrderUseCaseTest {
         verify(orderPersistencePort, never()).updateOrder(any());
         verify(userServicePort, never()).getUserPhoneNumber(any());
         verify(notificationServicePort, never()).sendOrderReadyNotification(any(), any(), any());
+    }
+
+    @Test
+    void when_DeliverOrder_Expect_Success() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        String enteredPin = "1234";
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        readyOrder.setStatus(OrderStatusEnum.READY);
+        readyOrder.setSecurityPin(enteredPin);
+
+        OrderModel deliveredOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        deliveredOrder.setStatus(OrderStatusEnum.DELIVERED);
+        deliveredOrder.setSecurityPin(enteredPin);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+        when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(deliveredOrder);
+
+        // Act
+        OrderModel result = orderUseCase.deliverOrder(orderId, enteredPin);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(OrderStatusEnum.DELIVERED, result.getStatus());
+        assertEquals(orderId, result.getId());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_DeliverOrder_WithEmployeeNotAssociatedWithRestaurant_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        String enteredPin = "1234";
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(null);
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, enteredPin));
+
+        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort, never()).findOrderById(any());
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void when_DeliverOrder_WithOrderNotFound_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        String enteredPin = "1234";
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, enteredPin));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FOUND, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void when_DeliverOrder_WithOrderNotFromEmployeeRestaurant_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long employeeRestaurantId = 1L;
+        Long orderRestaurantId = 2L;
+        String enteredPin = "1234";
+
+        RestaurantModel orderRestaurant = buildRestaurant(orderRestaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel readyOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
+        readyOrder.setStatus(OrderStatusEnum.READY);
+        readyOrder.setSecurityPin(enteredPin);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(employeeRestaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, enteredPin));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void when_DeliverOrder_WithOrderNotReady_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        String enteredPin = "1234";
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not READY
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, enteredPin));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_READY, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void when_DeliverOrder_WithInvalidSecurityPin_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        String correctPin = "1234";
+        String wrongPin = "5678";
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        readyOrder.setStatus(OrderStatusEnum.READY);
+        readyOrder.setSecurityPin(correctPin);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, wrongPin));
+
+        assertEquals(DomainMessagesConstants.INVALID_SECURITY_PIN, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+    }
+
+    @Test
+    void when_DeliverOrder_WithNullSecurityPin_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        String enteredPin = "1234";
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        readyOrder.setStatus(OrderStatusEnum.READY);
+        readyOrder.setSecurityPin(null); // No PIN set
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.deliverOrder(orderId, enteredPin));
+
+        assertEquals(DomainMessagesConstants.INVALID_SECURITY_PIN, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
     }
 }

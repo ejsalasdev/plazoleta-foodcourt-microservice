@@ -189,4 +189,37 @@ public class OrderUseCase implements OrderServicePort {
 
         return updatedOrder;
     }
+
+    @Override
+    public OrderModel deliverOrder(Long orderId, String enteredSecurityPin) {
+        Long currentEmployeeId = authenticatedUserPort.getCurrentUserId();
+        Long employeeRestaurantId = userServicePort.getUserRestaurantId(currentEmployeeId);
+
+        if (employeeRestaurantId == null) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
+        }
+
+        Optional<OrderModel> orderOptional = orderPersistencePort.findOrderById(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FOUND);
+        }
+
+        OrderModel order = orderOptional.get();
+
+        if (!order.getRestaurant().getId().equals(employeeRestaurantId)) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT);
+        }
+
+        if (order.getStatus() != OrderStatusEnum.READY) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_READY);
+        }
+
+        if (order.getSecurityPin() == null || !order.getSecurityPin().equals(enteredSecurityPin)) {
+            throw new CustomOrderException(DomainMessagesConstants.INVALID_SECURITY_PIN);
+        }
+
+        order.setStatus(OrderStatusEnum.DELIVERED);
+
+        return orderPersistencePort.updateOrder(order);
+    }
 }

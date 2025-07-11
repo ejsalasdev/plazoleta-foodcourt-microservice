@@ -68,6 +68,9 @@ public final class DomainMessagesConstants {
     public static final String ORDER_NOT_IN_PREPARATION = "Order is not in IN_PREPARATION status. Only orders in preparation can be marked as ready.";
     public static final String ORDER_MARKED_AS_READY_SUCCESSFULLY = "Order marked as ready successfully and notification sent to customer.";
     public static final String SECURITY_PIN_GENERATED = "Security PIN generated for order pickup.";
+    public static final String ORDER_NOT_READY = "Order is not in READY status. Only READY orders can be delivered.";
+    public static final String INVALID_SECURITY_PIN = "Invalid security PIN. Please verify the PIN and try again.";
+    public static final String ORDER_DELIVERED_SUCCESSFULLY = "Order delivered successfully.";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");
