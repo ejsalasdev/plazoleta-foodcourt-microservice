@@ -14,6 +14,7 @@ public class OrderModel {
     private Long employeeId;
     private RestaurantModel restaurant;
     private List<OrderDishModel> orderDishes;
+    private String securityPin;
 
     public OrderModel() {
     }
@@ -27,6 +28,18 @@ public class OrderModel {
         this.employeeId = employeeId;
         this.restaurant = restaurant;
         this.orderDishes = orderDishes;
+    }
+
+    public OrderModel(Long id, Long customerId, LocalDateTime date, OrderStatusEnum status,
+            Long employeeId, RestaurantModel restaurant, List<OrderDishModel> orderDishes, String securityPin) {
+        this.id = id;
+        this.customerId = customerId;
+        this.date = date;
+        this.status = status;
+        this.employeeId = employeeId;
+        this.restaurant = restaurant;
+        this.orderDishes = orderDishes;
+        this.securityPin = securityPin;
     }
 
     public Long getId() {
@@ -85,6 +98,14 @@ public class OrderModel {
         this.orderDishes = orderDishes;
     }
 
+    public String getSecurityPin() {
+        return securityPin;
+    }
+
+    public void setSecurityPin(String securityPin) {
+        this.securityPin = securityPin;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o)
@@ -110,6 +131,7 @@ public class OrderModel {
                 ", employeeId=" + employeeId +
                 ", restaurantId=" + (restaurant != null ? restaurant.getId() : null) +
                 ", orderDishesCount=" + (orderDishes != null ? orderDishes.size() : 0) +
+                ", securityPin='" + (securityPin != null ? "****" : null) + '\'' +
                 '}';
     }
 }
