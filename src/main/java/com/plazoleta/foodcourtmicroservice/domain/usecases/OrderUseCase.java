@@ -16,9 +16,11 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.OrderServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.utils.SecurityPinGenerator;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
@@ -31,6 +33,7 @@ public class OrderUseCase implements OrderServicePort {
     private final DishPersistencePort dishPersistencePort;
     private final AuthenticatedUserPort authenticatedUserPort;
     private final UserServicePort userServicePort;
+    private final NotificationServicePort notificationServicePort;
     private final PaginationValidatorChain paginationValidatorChain;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
@@ -38,12 +41,14 @@ public class OrderUseCase implements OrderServicePort {
                         DishPersistencePort dishPersistencePort,
                         AuthenticatedUserPort authenticatedUserPort,
                         UserServicePort userServicePort,
+                        NotificationServicePort notificationServicePort,
                         PaginationValidatorChain paginationValidatorChain) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.dishPersistencePort = dishPersistencePort;
         this.authenticatedUserPort = authenticatedUserPort;
         this.userServicePort = userServicePort;
+        this.notificationServicePort = notificationServicePort;
         this.paginationValidatorChain = paginationValidatorChain;
     }
 
@@ -147,5 +152,44 @@ public class OrderUseCase implements OrderServicePort {
         order.setStatus(OrderStatusEnum.IN_PREPARATION);
 
         return orderPersistencePort.updateOrder(order);
+    }
+
+    @Override
+    public OrderModel markOrderAsReady(Long orderId) {
+        Long currentEmployeeId = authenticatedUserPort.getCurrentUserId();
+        Long employeeRestaurantId = userServicePort.getUserRestaurantId(currentEmployeeId);
+
+        if (employeeRestaurantId == null) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
+        }
+
+        Optional<OrderModel> orderOptional = orderPersistencePort.findOrderById(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FOUND);
+        }
+
+        OrderModel order = orderOptional.get();
+
+        if (!order.getRestaurant().getId().equals(employeeRestaurantId)) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT);
+        }
+
+        if (order.getStatus() != OrderStatusEnum.IN_PREPARATION) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_IN_PREPARATION);
+        }
+
+        // Generate security PIN
+        String securityPin = SecurityPinGenerator.generateSecurityPin();
+        order.setSecurityPin(securityPin);
+        order.setStatus(OrderStatusEnum.READY);
+
+        // Update order in database
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Get customer phone number and send notification
+        String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
+        notificationServicePort.sendOrderReadyNotification(customerPhoneNumber, securityPin);
+
+        return updatedOrder;
     }
 }

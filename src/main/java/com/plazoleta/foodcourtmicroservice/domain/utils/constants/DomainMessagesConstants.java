@@ -65,6 +65,9 @@ public final class DomainMessagesConstants {
     public static final String ORDER_NOT_PENDING = "Order is not in PENDING status. Only PENDING orders can be assigned to preparation.";
     public static final String ORDER_NOT_FROM_EMPLOYEE_RESTAURANT = "Order does not belong to employee's restaurant.";
     public static final String ORDER_ASSIGNED_SUCCESSFULLY = "Order assigned successfully and status changed to IN_PREPARATION.";
+    public static final String ORDER_NOT_IN_PREPARATION = "Order is not in IN_PREPARATION status. Only orders in preparation can be marked as ready.";
+    public static final String ORDER_MARKED_AS_READY_SUCCESSFULLY = "Order marked as ready successfully and notification sent to customer.";
+    public static final String SECURITY_PIN_GENERATED = "Security PIN generated for order pickup.";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");

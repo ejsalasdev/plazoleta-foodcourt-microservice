@@ -8,4 +8,5 @@ public interface OrderServicePort {
     OrderModel createOrder(OrderModel orderModel);
     PageInfo<OrderModel> getOrdersByRestaurantAndStatus(OrderStatusEnum status, Integer page, Integer size);
     OrderModel assignOrderToEmployeeAndChangeStatus(Long orderId);
+    OrderModel markOrderAsReady(Long orderId);
 }
