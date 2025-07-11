@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.application.mappers.OrderRequestMapper;
@@ -60,5 +61,15 @@ public class OrderHandlerImpl implements OrderHandler {
         return new AssignOrderResponse(
                 ApplicationMessagesConstants.ORDER_ASSIGNED_SUCCESSFULLY,
                 LocalDateTime.now());
+    }
+
+    @Override
+    public OrderReadyResponse markOrderAsReady(Long orderId) {
+        OrderModel orderModel = orderServicePort.markOrderAsReady(orderId);
+
+        return new OrderReadyResponse(
+                orderModel.getId(),
+                orderModel.getStatus(),
+                ApplicationMessagesConstants.ORDER_MARKED_AS_READY_SUCCESSFULLY);
     }
 }
