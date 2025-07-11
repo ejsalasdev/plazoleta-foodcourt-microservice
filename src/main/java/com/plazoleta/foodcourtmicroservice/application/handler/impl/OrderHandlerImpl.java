@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.request.DeliverOrderRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.DeliverOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
@@ -71,5 +73,15 @@ public class OrderHandlerImpl implements OrderHandler {
                 orderModel.getId(),
                 orderModel.getStatus(),
                 ApplicationMessagesConstants.ORDER_MARKED_AS_READY_SUCCESSFULLY);
+    }
+
+    @Override
+    public DeliverOrderResponse deliverOrder(Long orderId, DeliverOrderRequest request) {
+        OrderModel orderModel = orderServicePort.deliverOrder(orderId, request.securityPin());
+
+        return new DeliverOrderResponse(
+                orderModel.getId(),
+                orderModel.getStatus(),
+                ApplicationMessagesConstants.ORDER_DELIVERED_SUCCESSFULLY);
     }
 }
