@@ -5,6 +5,7 @@ import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.plazoleta.foodcourtmicroservice.application.client.handler.MessagingHandlerClient;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.OrderServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
@@ -34,8 +35,8 @@ public class OrderBeanConfiguration {
     }
 
     @Bean
-    public NotificationServicePort notificationServicePort() {
-        return new NotificationServiceAdapter();
+    public NotificationServicePort notificationServicePort(MessagingHandlerClient messagingHandlerClient) {
+        return new NotificationServiceAdapter(messagingHandlerClient);
     }
 
     @Bean

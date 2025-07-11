@@ -178,17 +178,14 @@ public class OrderUseCase implements OrderServicePort {
             throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_IN_PREPARATION);
         }
 
-        // Generate security PIN
         String securityPin = SecurityPinGenerator.generateSecurityPin();
         order.setSecurityPin(securityPin);
         order.setStatus(OrderStatusEnum.READY);
 
-        // Update order in database
         OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
 
-        // Get customer phone number and send notification
         String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
-        notificationServicePort.sendOrderReadyNotification(customerPhoneNumber, securityPin);
+        notificationServicePort.sendOrderReadyNotification(order.getId(), customerPhoneNumber, securityPin);
 
         return updatedOrder;
     }
