@@ -11,6 +11,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.plazoleta.foodcourtmicroservice.infrastructure.security.jwt.JwtTokenValidator;
+import com.plazoleta.foodcourtmicroservice.infrastructure.utils.constants.SecurityConstants;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,15 +29,16 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(http -> {
                     http.requestMatchers(HttpMethod.GET, "/swagger-ui/**", "/v3/api-docs*/**").permitAll();
-                    http.requestMatchers(HttpMethod.POST, "/api/v1/restaurant/").hasAuthority("ADMIN");
-                    http.requestMatchers(HttpMethod.GET, "/api/v1/restaurant/").hasAuthority("CUSTOMER");
+                    http.requestMatchers(HttpMethod.POST, "/api/v1/restaurant/").hasAuthority(SecurityConstants.ROLE_ADMIN);
+                    http.requestMatchers(HttpMethod.GET, "/api/v1/restaurant/").hasAuthority(SecurityConstants.ROLE_CUSTOMER);
                     http.requestMatchers(HttpMethod.GET, "/api/v1/restaurant/owner/{ownerId}").permitAll();
-                    http.requestMatchers(HttpMethod.POST, "/api/v1/dish/").hasAuthority("OWNER");
-                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}").hasAuthority("OWNER");
-                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}/active").hasAuthority("OWNER");
-                    http.requestMatchers(HttpMethod.GET, "/api/v1/dish/restaurant/{restaurantId}").hasAuthority("CUSTOMER");
-                    http.requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAuthority("CUSTOMER");
-                    http.requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority("EMPLOYEE");
+                    http.requestMatchers(HttpMethod.POST, "/api/v1/dish/").hasAuthority(SecurityConstants.ROLE_OWNER);
+                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}").hasAuthority(SecurityConstants.ROLE_OWNER);
+                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/dish/{id}/active").hasAuthority(SecurityConstants.ROLE_OWNER);
+                    http.requestMatchers(HttpMethod.GET, "/api/v1/dish/restaurant/{restaurantId}").hasAuthority(SecurityConstants.ROLE_CUSTOMER);
+                    http.requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAuthority(SecurityConstants.ROLE_CUSTOMER);
+                    http.requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority(SecurityConstants.ROLE_EMPLOYEE);
+                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/orders/{orderId}/assign").hasAuthority(SecurityConstants.ROLE_EMPLOYEE);
 
                     http.anyRequest().denyAll();
                 })

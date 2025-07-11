@@ -473,4 +473,188 @@ class OrderUseCaseTest {
         return new com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo<>(
                 content, totalElements, totalPages, currentPage, pageSize, hasNext, hasPrevious);
     }
+
+    // Tests for assignOrderToEmployeeAndChangeStatus
+
+    @Test
+    void when_AssignOrderToEmployee_WithValidEmployeeAndPendingOrder_Expect_OrderAssignedAndStatusChanged() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+        
+        OrderModel pendingOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        pendingOrder.setStatus(OrderStatusEnum.PENDING);
+        pendingOrder.setEmployeeId(null);
+
+        OrderModel assignedOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        assignedOrder.setStatus(OrderStatusEnum.IN_PREPARATION);
+        assignedOrder.setEmployeeId(employeeId);
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
+        when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(assignedOrder);
+
+        // Act
+        OrderModel result = orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(OrderStatusEnum.IN_PREPARATION, result.getStatus());
+        assertEquals(employeeId, result.getEmployeeId());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_AssignOrderToEmployee_WithNonEmployeeRole_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        List<String> roles = List.of("CUSTOMER");
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId));
+
+        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort, never()).getCurrentUserId();
+        verify(userServicePort, never()).getUserRestaurantId(anyLong());
+        verify(orderPersistencePort, never()).findOrderById(anyLong());
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_AssignOrderToEmployee_WithEmployeeNotAssociatedWithRestaurant_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(null);
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId));
+
+        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort, never()).findOrderById(anyLong());
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_AssignOrderToEmployee_WithOrderNotFound_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FOUND, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_AssignOrderToEmployee_WithOrderFromDifferentRestaurant_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long employeeRestaurantId = 1L;
+        Long orderRestaurantId = 2L; // Different restaurant
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+
+        RestaurantModel orderRestaurant = buildRestaurant(orderRestaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+        
+        OrderModel pendingOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
+        pendingOrder.setStatus(OrderStatusEnum.PENDING);
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(employeeRestaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+    }
+
+    @Test
+    void when_AssignOrderToEmployee_WithOrderNotInPendingStatus_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long employeeId = 123L;
+        Long restaurantId = 1L;
+        List<String> roles = List.of(DomainMessagesConstants.EMPLOYEE_ROLE);
+
+        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+        
+        OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
+        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not PENDING
+
+        when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
+        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.assignOrderToEmployeeAndChangeStatus(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_PENDING, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserRoles();
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+    }
 }

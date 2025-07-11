@@ -61,6 +61,10 @@ public final class DomainMessagesConstants {
     public static final String EMPLOYEE_NOT_AUTHORIZED = "User is not authorized to access this resource. Only employees can list orders.";
     public static final String EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT = "Employee is not associated with any restaurant.";
     public static final String EMPLOYEE_ROLE = "EMPLOYEE";
+    public static final String ORDER_NOT_FOUND = "Order not found.";
+    public static final String ORDER_NOT_PENDING = "Order is not in PENDING status. Only PENDING orders can be assigned to preparation.";
+    public static final String ORDER_NOT_FROM_EMPLOYEE_RESTAURANT = "Order does not belong to employee's restaurant.";
+    public static final String ORDER_ASSIGNED_SUCCESSFULLY = "Order assigned successfully and status changed to IN_PREPARATION.";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");

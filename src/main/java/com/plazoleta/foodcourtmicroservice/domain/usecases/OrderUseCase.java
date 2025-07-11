@@ -112,4 +112,40 @@ public class OrderUseCase implements OrderServicePort {
 
         return orderPersistencePort.findOrdersByRestaurantIdAndStatus(restaurantId, status, page, size);
     }
+
+    @Override
+    public OrderModel assignOrderToEmployeeAndChangeStatus(Long orderId) {
+        
+        List<String> userRoles = authenticatedUserPort.getCurrentUserRoles();
+        if (!userRoles.contains(DomainMessagesConstants.EMPLOYEE_ROLE)) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED);
+        }
+
+        Long currentEmployeeId = authenticatedUserPort.getCurrentUserId();
+        
+        Long employeeRestaurantId = userServicePort.getUserRestaurantId(currentEmployeeId);
+        if (employeeRestaurantId == null) {
+            throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
+        }
+
+        Optional<OrderModel> orderOptional = orderPersistencePort.findOrderById(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FOUND);
+        }
+
+        OrderModel order = orderOptional.get();
+
+        if (!order.getRestaurant().getId().equals(employeeRestaurantId)) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT);
+        }
+
+        if (order.getStatus() != OrderStatusEnum.PENDING) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_PENDING);
+        }
+
+        order.setEmployeeId(currentEmployeeId);
+        order.setStatus(OrderStatusEnum.IN_PREPARATION);
+
+        return orderPersistencePort.updateOrder(order);
+    }
 }
