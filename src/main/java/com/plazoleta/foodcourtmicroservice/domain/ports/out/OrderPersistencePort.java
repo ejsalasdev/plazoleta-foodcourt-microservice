@@ -20,4 +20,6 @@ public interface OrderPersistencePort {
 
     PageInfo<OrderModel> findOrdersByRestaurantIdAndStatus(Long restaurantId, OrderStatusEnum status, Integer page,
             Integer size);
+    
+    OrderModel updateOrder(OrderModel orderModel);
 }

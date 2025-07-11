@@ -3,6 +3,8 @@ package com.plazoleta.foodcourtmicroservice.infrastructure.controllers.rest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
@@ -67,5 +70,22 @@ public class OrderController {
                         @Parameter(description = "Number of elements per page", example = "10") @RequestParam(defaultValue = "10") Integer size) {
                 PageInfo<OrderResponse> response = orderHandler.getOrdersByStatus(status, page, size);
                 return ResponseEntity.ok(response);
+        }
+
+        @PatchMapping("/{orderId}/assign")
+        @Operation(summary = "Assign order to employee and change status to IN_PREPARATION", description = "Allows an employee to assign themselves to a PENDING order and change its status to IN_PREPARATION")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Order assigned successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AssignOrderResponse.class))),
+                @ApiResponse(responseCode = "400", description = "Invalid order ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "403", description = "Forbidden - User does not have EMPLOYEE role", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "404", description = "Order not found or employee not associated with restaurant", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "409", description = "Order is not in PENDING status or doesn't belong to employee's restaurant", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
+        })
+        public ResponseEntity<AssignOrderResponse> assignOrderToEmployee(
+                @Parameter(description = "ID of the order to assign", example = "1") @PathVariable Long orderId) {
+                AssignOrderResponse response = orderHandler.assignOrderToEmployee(orderId);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
         }
 }

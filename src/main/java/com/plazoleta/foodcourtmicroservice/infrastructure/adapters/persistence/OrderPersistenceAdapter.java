@@ -136,4 +136,11 @@ public class OrderPersistenceAdapter implements OrderPersistencePort {
                 orderEntityPage.hasPrevious()
         );
     }
+
+    @Override
+    public OrderModel updateOrder(OrderModel orderModel) {
+        OrderEntity orderEntity = orderEntityMapper.modelToEntityWithDishes(orderModel);
+        OrderEntity updatedEntity = orderRepository.save(orderEntity);
+        return orderEntityMapper.entityToModelWithDishes(updatedEntity);
+    }
 }
