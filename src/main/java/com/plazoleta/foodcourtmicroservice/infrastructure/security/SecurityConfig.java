@@ -39,6 +39,7 @@ public class SecurityConfig {
                     http.requestMatchers(HttpMethod.POST, "/api/v1/orders").hasAuthority(SecurityConstants.ROLE_CUSTOMER);
                     http.requestMatchers(HttpMethod.GET, "/api/v1/orders").hasAuthority(SecurityConstants.ROLE_EMPLOYEE);
                     http.requestMatchers(HttpMethod.PATCH, "/api/v1/orders/{orderId}/assign").hasAuthority(SecurityConstants.ROLE_EMPLOYEE);
+                    http.requestMatchers(HttpMethod.PATCH, "/api/v1/orders/{orderId}/ready").hasAuthority(SecurityConstants.ROLE_EMPLOYEE);
 
                     http.anyRequest().denyAll();
                 })

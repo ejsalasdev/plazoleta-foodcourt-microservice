@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.foodcourtmicroservice.application.dto.request.CreateOrderRequest;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
@@ -86,6 +87,23 @@ public class OrderController {
         public ResponseEntity<AssignOrderResponse> assignOrderToEmployee(
                 @Parameter(description = "ID of the order to assign", example = "1") @PathVariable Long orderId) {
                 AssignOrderResponse response = orderHandler.assignOrderToEmployee(orderId);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+
+        @PatchMapping("/{orderId}/ready")
+        @Operation(summary = "Mark order as ready", description = "Allows an employee to mark an IN_PREPARATION order as READY and send SMS notification to customer")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Order marked as ready successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = OrderReadyResponse.class))),
+                @ApiResponse(responseCode = "400", description = "Invalid order ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing authentication", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "403", description = "Forbidden - User does not have EMPLOYEE role", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "404", description = "Order not found or employee not associated with restaurant", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "409", description = "Order is not in IN_PREPARATION status or doesn't belong to employee's restaurant", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
+        })
+        public ResponseEntity<OrderReadyResponse> markOrderAsReady(
+                @Parameter(description = "ID of the order to mark as ready", example = "1") @PathVariable Long orderId) {
+                OrderReadyResponse response = orderHandler.markOrderAsReady(orderId);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
         }
 }

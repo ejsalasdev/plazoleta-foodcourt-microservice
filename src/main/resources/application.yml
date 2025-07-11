@@ -32,3 +32,6 @@ jwt:
 
 user-microservice:
   url: http://localhost:8091
+
+messaging-microservice:
+  url: http://localhost:8093

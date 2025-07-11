@@ -33,4 +33,15 @@ public class UserServiceAdapter implements UserServicePort {
                     String.format(InfrastructureMessagesConstants.USER_NOT_FOUND, userId));
         }
     }
+
+    @Override
+    public String getUserPhoneNumber(Long userId) {
+        try {
+            UserInfoResponse userInfo = userHandlerClient.getUserInfobyId(userId);
+            return userInfo.phoneNumber();
+        } catch (FeignException.NotFound e) {
+            throw new UserNotFoundException(
+                    String.format(InfrastructureMessagesConstants.USER_NOT_FOUND, userId));
+        }
+    }
 }

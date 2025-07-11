@@ -5,14 +5,17 @@ import java.util.Set;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.plazoleta.foodcourtmicroservice.application.client.handler.MessagingHandlerClient;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.OrderServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.usecases.OrderUseCase;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
+import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.external.NotificationServiceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence.OrderPersistenceAdapter;
 import com.plazoleta.foodcourtmicroservice.infrastructure.mappers.OrderEntityMapper;
 import com.plazoleta.foodcourtmicroservice.infrastructure.repositories.postgres.OrderRepository;
@@ -32,6 +35,11 @@ public class OrderBeanConfiguration {
     }
 
     @Bean
+    public NotificationServicePort notificationServicePort(MessagingHandlerClient messagingHandlerClient) {
+        return new NotificationServiceAdapter(messagingHandlerClient);
+    }
+
+    @Bean
     public PaginationValidatorChain orderPaginationValidatorChain() {
         return new PaginationValidatorChain(Set.of("id", "date", "status"));
     }
@@ -42,12 +50,14 @@ public class OrderBeanConfiguration {
             DishPersistencePort dishPersistencePort,
             AuthenticatedUserPort authenticatedUserPort,
             UserServicePort userServicePort,
+            NotificationServicePort notificationServicePort,
             PaginationValidatorChain orderPaginationValidatorChain) {
         return new OrderUseCase(orderPersistencePort,
                 restaurantPersistencePort,
                 dishPersistencePort,
                 authenticatedUserPort,
                 userServicePort,
+                notificationServicePort,
                 orderPaginationValidatorChain);
     }
 }
