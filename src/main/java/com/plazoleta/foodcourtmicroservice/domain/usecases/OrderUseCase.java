@@ -25,7 +25,6 @@ import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessages
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
-
 public class OrderUseCase implements OrderServicePort {
 
     private final OrderPersistencePort orderPersistencePort;
@@ -37,12 +36,12 @@ public class OrderUseCase implements OrderServicePort {
     private final PaginationValidatorChain paginationValidatorChain;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
-                        RestaurantPersistencePort restaurantPersistencePort,
-                        DishPersistencePort dishPersistencePort,
-                        AuthenticatedUserPort authenticatedUserPort,
-                        UserServicePort userServicePort,
-                        NotificationServicePort notificationServicePort,
-                        PaginationValidatorChain paginationValidatorChain) {
+            RestaurantPersistencePort restaurantPersistencePort,
+            DishPersistencePort dishPersistencePort,
+            AuthenticatedUserPort authenticatedUserPort,
+            UserServicePort userServicePort,
+            NotificationServicePort notificationServicePort,
+            PaginationValidatorChain paginationValidatorChain) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
         this.dishPersistencePort = dishPersistencePort;
@@ -108,9 +107,9 @@ public class OrderUseCase implements OrderServicePort {
         }
 
         Long currentUserId = authenticatedUserPort.getCurrentUserId();
-        
+
         Long restaurantId = userServicePort.getUserRestaurantId(currentUserId);
-        
+
         if (restaurantId == null) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
         }
@@ -120,14 +119,14 @@ public class OrderUseCase implements OrderServicePort {
 
     @Override
     public OrderModel assignOrderToEmployeeAndChangeStatus(Long orderId) {
-        
+
         List<String> userRoles = authenticatedUserPort.getCurrentUserRoles();
         if (!userRoles.contains(DomainMessagesConstants.EMPLOYEE_ROLE)) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_AUTHORIZED);
         }
 
         Long currentEmployeeId = authenticatedUserPort.getCurrentUserId();
-        
+
         Long employeeRestaurantId = userServicePort.getUserRestaurantId(currentEmployeeId);
         if (employeeRestaurantId == null) {
             throw new CustomOrderException(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT);
@@ -239,15 +238,12 @@ public class OrderUseCase implements OrderServicePort {
         }
 
         if (order.getStatus() != OrderStatusEnum.PENDING) {
+            String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
+            notificationServicePort.sendOrderCancelledNotification(order.getId(), customerPhoneNumber);
             throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION);
         }
 
         order.setStatus(OrderStatusEnum.CANCELLED);
-        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
-
-        String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
-        notificationServicePort.sendOrderCancelledNotification(order.getId(), customerPhoneNumber);
-
-        return updatedOrder;
+        return orderPersistencePort.updateOrder(order);
     }
 }

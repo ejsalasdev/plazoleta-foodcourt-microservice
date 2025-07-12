@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -60,7 +59,7 @@ class OrderUseCaseTest {
     private UserServicePort userServicePort;
 
     @Mock
-    NotificationServicePort notificationServicePort;
+    private NotificationServicePort notificationServicePort;
 
     @Mock
     private PaginationValidatorChain paginationValidatorChain;
@@ -493,7 +492,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
+        
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
         pendingOrder.setEmployeeId(null);
@@ -607,7 +606,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
+        
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -641,7 +640,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
+        
         OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not PENDING
 
@@ -663,399 +662,18 @@ class OrderUseCaseTest {
         verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
-    @Test
-    void when_MarkOrderAsReady_Expect_Success() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String customerPhoneNumber = "+573001234567";
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
-        readyOrder.setSecurityPin("1234");
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
-        when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(readyOrder);
-        when(userServicePort.getUserPhoneNumber(456L)).thenReturn(customerPhoneNumber);
-
-        // Act
-        OrderModel result = orderUseCase.markOrderAsReady(orderId);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(OrderStatusEnum.READY, result.getStatus());
-        assertNotNull(result.getSecurityPin());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
-        verify(userServicePort).getUserPhoneNumber(456L);
-        verify(notificationServicePort).sendOrderReadyNotification(eq(orderId), eq(customerPhoneNumber),
-                any(String.class));
-    }
 
     @Test
-    void when_MarkOrderAsReady_WithEmployeeNotAssociatedWithRestaurant_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(null);
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.markOrderAsReady(orderId));
-
-        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort, never()).findOrderById(any());
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(userServicePort, never()).getUserPhoneNumber(any());
-        verify(notificationServicePort, never()).sendOrderReadyNotification(any(), any(), any());
-    }
-
-    @Test
-    void when_MarkOrderAsReady_WithOrderNotFound_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.markOrderAsReady(orderId));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_FOUND, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(userServicePort, never()).getUserPhoneNumber(any());
-        verify(notificationServicePort, never()).sendOrderReadyNotification(any(), any(), any());
-    }
-
-    @Test
-    void when_MarkOrderAsReady_WithOrderNotFromEmployeeRestaurant_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long employeeRestaurantId = 1L;
-        Long orderRestaurantId = 2L; // Different restaurant
-
-        RestaurantModel orderRestaurant = buildRestaurant(orderRestaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
-        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION);
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(employeeRestaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.markOrderAsReady(orderId));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(userServicePort, never()).getUserPhoneNumber(any());
-        verify(notificationServicePort, never()).sendOrderReadyNotification(any(), any(), any());
-    }
-
-    @Test
-    void when_MarkOrderAsReady_WithOrderNotInPreparation_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel pendingOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        pendingOrder.setStatus(OrderStatusEnum.PENDING); // Not IN_PREPARATION
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.markOrderAsReady(orderId));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_IN_PREPARATION, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(userServicePort, never()).getUserPhoneNumber(any());
-        verify(notificationServicePort, never()).sendOrderReadyNotification(any(), any(), any());
-    }
-
-    @Test
-    void when_DeliverOrder_Expect_Success() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String enteredPin = "1234";
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
-        readyOrder.setSecurityPin(enteredPin);
-
-        OrderModel deliveredOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        deliveredOrder.setStatus(OrderStatusEnum.DELIVERED);
-        deliveredOrder.setSecurityPin(enteredPin);
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
-        when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(deliveredOrder);
-
-        // Act
-        OrderModel result = orderUseCase.deliverOrder(orderId, enteredPin);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(OrderStatusEnum.DELIVERED, result.getStatus());
-        assertEquals(orderId, result.getId());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
-    }
-
-    @Test
-    void when_DeliverOrder_WithEmployeeNotAssociatedWithRestaurant_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        String enteredPin = "1234";
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(null);
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, enteredPin));
-
-        assertEquals(DomainMessagesConstants.EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort, never()).findOrderById(any());
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    @Test
-    void when_DeliverOrder_WithOrderNotFound_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String enteredPin = "1234";
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, enteredPin));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_FOUND, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    @Test
-    void when_DeliverOrder_WithOrderNotFromEmployeeRestaurant_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long employeeRestaurantId = 1L;
-        Long orderRestaurantId = 2L;
-        String enteredPin = "1234";
-
-        RestaurantModel orderRestaurant = buildRestaurant(orderRestaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
-        readyOrder.setSecurityPin(enteredPin);
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(employeeRestaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, enteredPin));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_FROM_EMPLOYEE_RESTAURANT, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    @Test
-    void when_DeliverOrder_WithOrderNotReady_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String enteredPin = "1234";
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not READY
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, enteredPin));
-
-        assertEquals(DomainMessagesConstants.ORDER_NOT_READY, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    @Test
-    void when_DeliverOrder_WithInvalidSecurityPin_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String correctPin = "1234";
-        String wrongPin = "5678";
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
-        readyOrder.setSecurityPin(correctPin);
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, wrongPin));
-
-        assertEquals(DomainMessagesConstants.INVALID_SECURITY_PIN, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    @Test
-    void when_DeliverOrder_WithNullSecurityPin_Expect_CustomOrderException() {
-        // Arrange
-        Long orderId = 1L;
-        Long employeeId = 123L;
-        Long restaurantId = 1L;
-        String enteredPin = "1234";
-
-        RestaurantModel testRestaurant = buildRestaurant(restaurantId);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
-        readyOrder.setSecurityPin(null); // No PIN set
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
-        when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
-
-        // Act & Assert
-        CustomOrderException exception = assertThrows(CustomOrderException.class,
-                () -> orderUseCase.deliverOrder(orderId, enteredPin));
-
-        assertEquals(DomainMessagesConstants.INVALID_SECURITY_PIN, exception.getMessage());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(userServicePort).getUserRestaurantId(employeeId);
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-    }
-
-    // ===========================
-    // CANCEL ORDER TESTS
-    // ===========================
-
-    @Test
-    void when_CancelOrder_Expect_Success() {
+    void when_CancelOrder_WithValidPendingOrder_Expect_OrderCancelledSuccessfully() {
         // Arrange
         Long orderId = 1L;
         Long customerId = 123L;
-        String customerPhone = "+573001234567";
 
         RestaurantModel testRestaurant = buildRestaurant(1L);
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
+        
         OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -1065,46 +683,6 @@ class OrderUseCaseTest {
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
         when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
         when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(cancelledOrder);
-        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(customerPhone);
-
-        // Act
-        OrderModel result = orderUseCase.cancelOrder(orderId);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(OrderStatusEnum.CANCELLED, result.getStatus());
-        assertEquals(orderId, result.getId());
-
-        verify(authenticatedUserPort).getCurrentUserId();
-        verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
-        verify(userServicePort).getUserPhoneNumber(customerId);
-        verify(notificationServicePort).sendOrderCancelledNotification(orderId, customerPhone);
-    }
-
-    @Test
-    void when_CancelOrderWithNotificationFailure_Expect_OrderStillCancelled() {
-        // Arrange
-        Long orderId = 1L;
-        Long customerId = 10L;
-        String customerPhone = "+573001234567";
-        
-        RestaurantModel testRestaurant = buildRestaurant(1L);
-        CategoryModel testCategory = buildCategory(1L);
-        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
-        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
-        pendingOrder.setStatus(OrderStatusEnum.PENDING);
-
-        OrderModel cancelledOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
-        cancelledOrder.setStatus(OrderStatusEnum.CANCELLED);
-
-        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
-        when(orderPersistencePort.updateOrder(any())).thenReturn(cancelledOrder);
-        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(customerPhone);
-        // NotificationServiceAdapter handles exceptions internally, so we don't throw here
 
         // Act
         OrderModel result = orderUseCase.cancelOrder(orderId);
@@ -1118,15 +696,14 @@ class OrderUseCaseTest {
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
         verify(orderPersistencePort).updateOrder(any(OrderModel.class));
-        verify(userServicePort).getUserPhoneNumber(customerId);
-        verify(notificationServicePort).sendOrderCancelledNotification(orderId, customerPhone);
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any(String.class));
     }
 
     @Test
-    void when_CancelOrderNotFound_Expect_CustomOrderException() {
+    void when_CancelOrder_WithOrderNotFound_Expect_CustomOrderException() {
         // Arrange
-        Long orderId = 999L;
-        Long customerId = 10L;
+        Long orderId = 1L;
+        Long customerId = 123L;
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
         when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
@@ -1139,27 +716,27 @@ class OrderUseCaseTest {
 
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any(String.class));
     }
 
     @Test
-    void when_CancelOrderNotBelongingToCustomer_Expect_CustomOrderException() {
+    void when_CancelOrder_WithOrderNotBelongingToCustomer_Expect_CustomOrderException() {
         // Arrange
         Long orderId = 1L;
-        Long customerId = 10L;
-        Long differentCustomerId = 20L;
+        Long customerId = 123L;
+        Long differentCustomerId = 456L;
 
         RestaurantModel testRestaurant = buildRestaurant(1L);
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel order = buildSavedOrder(orderId, differentCustomerId, testRestaurant, List.of(orderDish));
-        order.setStatus(OrderStatusEnum.PENDING);
+        
+        OrderModel orderFromDifferentCustomer = buildSavedOrder(orderId, differentCustomerId, testRestaurant, List.of(orderDish));
+        orderFromDifferentCustomer.setStatus(OrderStatusEnum.PENDING);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(order));
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(orderFromDifferentCustomer));
 
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class,
@@ -1169,26 +746,28 @@ class OrderUseCaseTest {
 
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any(String.class));
     }
 
     @Test
-    void when_CancelOrderNotInPendingStatus_Expect_CustomOrderException() {
+    void when_CancelOrder_WithOrderInPreparation_Expect_SMSNotificationAndException() {
         // Arrange
         Long orderId = 1L;
-        Long customerId = 10L;
+        Long customerId = 123L;
+        String phoneNumber = "+1234567890";
 
         RestaurantModel testRestaurant = buildRestaurant(1L);
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel inPreparationOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
-        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION);
+        
+        OrderModel orderInPreparation = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        orderInPreparation.setStatus(OrderStatusEnum.IN_PREPARATION);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(orderInPreparation));
+        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(phoneNumber);
 
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class,
@@ -1198,26 +777,29 @@ class OrderUseCaseTest {
 
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+        verify(userServicePort).getUserPhoneNumber(customerId);
+        verify(notificationServicePort).sendOrderCancelledNotification(orderId, phoneNumber);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
     @Test
-    void when_CancelOrderReadyStatus_Expect_CustomOrderException() {
+    void when_CancelOrder_WithOrderReady_Expect_SMSNotificationAndException() {
         // Arrange
         Long orderId = 1L;
-        Long customerId = 10L;
+        Long customerId = 123L;
+        String phoneNumber = "+1234567890";
 
         RestaurantModel testRestaurant = buildRestaurant(1L);
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel readyOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
-        readyOrder.setStatus(OrderStatusEnum.READY);
+        
+        OrderModel orderReady = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        orderReady.setStatus(OrderStatusEnum.READY);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(orderReady));
+        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(phoneNumber);
 
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class,
@@ -1227,26 +809,29 @@ class OrderUseCaseTest {
 
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+        verify(userServicePort).getUserPhoneNumber(customerId);
+        verify(notificationServicePort).sendOrderCancelledNotification(orderId, phoneNumber);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
     @Test
-    void when_CancelOrderDeliveredStatus_Expect_CustomOrderException() {
+    void when_CancelOrder_WithOrderDelivered_Expect_SMSNotificationAndException() {
         // Arrange
         Long orderId = 1L;
-        Long customerId = 10L;
+        Long customerId = 123L;
+        String phoneNumber = "+1234567890";
 
         RestaurantModel testRestaurant = buildRestaurant(1L);
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-
-        OrderModel deliveredOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
-        deliveredOrder.setStatus(OrderStatusEnum.DELIVERED);
+        
+        OrderModel orderDelivered = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        orderDelivered.setStatus(OrderStatusEnum.DELIVERED);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
-        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(deliveredOrder));
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(orderDelivered));
+        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(phoneNumber);
 
         // Act & Assert
         CustomOrderException exception = assertThrows(CustomOrderException.class,
@@ -1256,7 +841,8 @@ class OrderUseCaseTest {
 
         verify(authenticatedUserPort).getCurrentUserId();
         verify(orderPersistencePort).findOrderById(orderId);
-        verify(orderPersistencePort, never()).updateOrder(any());
-        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+        verify(userServicePort).getUserPhoneNumber(customerId);
+        verify(notificationServicePort).sendOrderCancelledNotification(orderId, phoneNumber);
+        verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 }

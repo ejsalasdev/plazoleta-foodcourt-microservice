@@ -39,7 +39,7 @@ public class NotificationServiceAdapter implements NotificationServicePort {
     @Override
     public void sendOrderCancelledNotification(Long orderId, String phoneNumber) {
         try {
-            String message = "Your order has been cancelled successfully. Sorry for any inconvenience.";
+            String message = "Sorry, your order is already being prepared and cannot be cancelled";
 
             SendSmsRequest request = new SendSmsRequest(phoneNumber, message, null, orderId);
 

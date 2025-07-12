@@ -8,7 +8,7 @@ public record CancelOrderResponse(
     Long orderId,
     
     @Schema(description = "Confirmation message about the order cancellation", 
-            example = "Order has been cancelled successfully and notification sent to customer.")
+            example = "Order has been cancelled successfully.")
     String message
 ) {
 }
