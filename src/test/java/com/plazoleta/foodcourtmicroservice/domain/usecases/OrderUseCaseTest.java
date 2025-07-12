@@ -1039,4 +1039,224 @@ class OrderUseCaseTest {
         verify(orderPersistencePort).findOrderById(orderId);
         verify(orderPersistencePort, never()).updateOrder(any());
     }
+
+    // ===========================
+    // CANCEL ORDER TESTS
+    // ===========================
+
+    @Test
+    void when_CancelOrder_Expect_Success() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 123L;
+        String customerPhone = "+573001234567";
+
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        pendingOrder.setStatus(OrderStatusEnum.PENDING);
+
+        OrderModel cancelledOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        cancelledOrder.setStatus(OrderStatusEnum.CANCELLED);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
+        when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(cancelledOrder);
+        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(customerPhone);
+
+        // Act
+        OrderModel result = orderUseCase.cancelOrder(orderId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(OrderStatusEnum.CANCELLED, result.getStatus());
+        assertEquals(orderId, result.getId());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+        verify(userServicePort).getUserPhoneNumber(customerId);
+        verify(notificationServicePort).sendOrderCancelledNotification(orderId, customerPhone);
+    }
+
+    @Test
+    void when_CancelOrderWithNotificationFailure_Expect_OrderStillCancelled() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 10L;
+        String customerPhone = "+573001234567";
+        
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        pendingOrder.setStatus(OrderStatusEnum.PENDING);
+
+        OrderModel cancelledOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        cancelledOrder.setStatus(OrderStatusEnum.CANCELLED);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
+        when(orderPersistencePort.updateOrder(any())).thenReturn(cancelledOrder);
+        when(userServicePort.getUserPhoneNumber(customerId)).thenReturn(customerPhone);
+        // NotificationServiceAdapter handles exceptions internally, so we don't throw here
+
+        // Act
+        OrderModel result = orderUseCase.cancelOrder(orderId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(OrderStatusEnum.CANCELLED, result.getStatus());
+        assertEquals(orderId, result.getId());
+        assertEquals(customerId, result.getCustomerId());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+        verify(userServicePort).getUserPhoneNumber(customerId);
+        verify(notificationServicePort).sendOrderCancelledNotification(orderId, customerPhone);
+    }
+
+    @Test
+    void when_CancelOrderNotFound_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 999L;
+        Long customerId = 10L;
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.cancelOrder(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FOUND, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+    }
+
+    @Test
+    void when_CancelOrderNotBelongingToCustomer_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 10L;
+        Long differentCustomerId = 20L;
+
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel order = buildSavedOrder(orderId, differentCustomerId, testRestaurant, List.of(orderDish));
+        order.setStatus(OrderStatusEnum.PENDING);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(order));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.cancelOrder(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_FROM_CUSTOMER, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+    }
+
+    @Test
+    void when_CancelOrderNotInPendingStatus_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 10L;
+
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel inPreparationOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(inPreparationOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.cancelOrder(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+    }
+
+    @Test
+    void when_CancelOrderReadyStatus_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 10L;
+
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel readyOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        readyOrder.setStatus(OrderStatusEnum.READY);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(readyOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.cancelOrder(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+    }
+
+    @Test
+    void when_CancelOrderDeliveredStatus_Expect_CustomOrderException() {
+        // Arrange
+        Long orderId = 1L;
+        Long customerId = 10L;
+
+        RestaurantModel testRestaurant = buildRestaurant(1L);
+        CategoryModel testCategory = buildCategory(1L);
+        DishModel testDish = buildDish(1L, testRestaurant, testCategory);
+        OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
+
+        OrderModel deliveredOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
+        deliveredOrder.setStatus(OrderStatusEnum.DELIVERED);
+
+        when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(deliveredOrder));
+
+        // Act & Assert
+        CustomOrderException exception = assertThrows(CustomOrderException.class,
+                () -> orderUseCase.cancelOrder(orderId));
+
+        assertEquals(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION, exception.getMessage());
+
+        verify(authenticatedUserPort).getCurrentUserId();
+        verify(orderPersistencePort).findOrderById(orderId);
+        verify(orderPersistencePort, never()).updateOrder(any());
+        verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any());
+    }
 }

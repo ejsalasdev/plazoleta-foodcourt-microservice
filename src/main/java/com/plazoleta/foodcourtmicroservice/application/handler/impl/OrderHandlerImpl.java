@@ -11,6 +11,7 @@ import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderR
 import com.plazoleta.foodcourtmicroservice.application.dto.response.DeliverOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.CancelOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.application.mappers.OrderRequestMapper;
 import com.plazoleta.foodcourtmicroservice.application.mappers.OrderResponseMapper;
@@ -83,5 +84,14 @@ public class OrderHandlerImpl implements OrderHandler {
                 orderModel.getId(),
                 orderModel.getStatus(),
                 ApplicationMessagesConstants.ORDER_DELIVERED_SUCCESSFULLY);
+    }
+
+    @Override
+    public CancelOrderResponse cancelOrder(Long orderId) {
+        OrderModel orderModel = orderServicePort.cancelOrder(orderId);
+
+        return new CancelOrderResponse(
+                orderModel.getId(),
+                ApplicationMessagesConstants.ORDER_CANCELLED_SUCCESSFULLY);
     }
 }

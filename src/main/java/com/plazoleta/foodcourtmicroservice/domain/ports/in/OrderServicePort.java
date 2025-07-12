@@ -10,4 +10,5 @@ public interface OrderServicePort {
     OrderModel assignOrderToEmployeeAndChangeStatus(Long orderId);
     OrderModel markOrderAsReady(Long orderId);
     OrderModel deliverOrder(Long orderId, String securityPin);
+    OrderModel cancelOrder(Long orderId);
 }

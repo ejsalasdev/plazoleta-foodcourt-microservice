@@ -222,4 +222,32 @@ public class OrderUseCase implements OrderServicePort {
 
         return orderPersistencePort.updateOrder(order);
     }
+
+    @Override
+    public OrderModel cancelOrder(Long orderId) {
+        Long currentCustomerId = authenticatedUserPort.getCurrentUserId();
+
+        Optional<OrderModel> orderOptional = orderPersistencePort.findOrderById(orderId);
+        if (orderOptional.isEmpty()) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FOUND);
+        }
+
+        OrderModel order = orderOptional.get();
+
+        if (!order.getCustomerId().equals(currentCustomerId)) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_FROM_CUSTOMER);
+        }
+
+        if (order.getStatus() != OrderStatusEnum.PENDING) {
+            throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION);
+        }
+
+        order.setStatus(OrderStatusEnum.CANCELLED);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
+        notificationServicePort.sendOrderCancelledNotification(order.getId(), customerPhoneNumber);
+
+        return updatedOrder;
+    }
 }
