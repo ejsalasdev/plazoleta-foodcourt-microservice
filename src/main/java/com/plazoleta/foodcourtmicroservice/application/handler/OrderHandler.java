@@ -6,6 +6,7 @@ import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderRespons
 import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.DeliverOrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.CancelOrderResponse;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 
@@ -19,4 +20,6 @@ public interface OrderHandler {
     OrderReadyResponse markOrderAsReady(Long orderId);
     
     DeliverOrderResponse deliverOrder(Long orderId, DeliverOrderRequest request);
+    
+    CancelOrderResponse cancelOrder(Long orderId);
 }

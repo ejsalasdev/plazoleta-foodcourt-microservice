@@ -17,6 +17,7 @@ import com.plazoleta.foodcourtmicroservice.application.dto.response.AssignOrderR
 import com.plazoleta.foodcourtmicroservice.application.dto.response.DeliverOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderReadyResponse;
 import com.plazoleta.foodcourtmicroservice.application.dto.response.OrderResponse;
+import com.plazoleta.foodcourtmicroservice.application.dto.response.CancelOrderResponse;
 import com.plazoleta.foodcourtmicroservice.application.handler.OrderHandler;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
@@ -124,6 +125,23 @@ public class OrderController {
                         @Parameter(description = "ID of the order to deliver", example = "1") @PathVariable Long orderId,
                         @Parameter(description = "Delivery request with security PIN") @Valid @RequestBody DeliverOrderRequest request) {
                 DeliverOrderResponse response = orderHandler.deliverOrder(orderId, request);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+
+        @PatchMapping("/{orderId}/cancel")
+        @Operation(summary = "Cancel an order", description = "Allow a customer to cancel their PENDING order and send notification")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Order cancelled successfully", content = @Content(mediaType = "application/json", schema = @Schema(implementation = CancelOrderResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Invalid order ID", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "401", description = "User not authenticated", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "403", description = "User not authorized (only customers can cancel their own orders)", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Order not found or does not belong to the customer", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "409", description = "Order is not in PENDING status - cannot be cancelled", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class))),
+                        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ExceptionResponse.class)))
+        })
+        public ResponseEntity<CancelOrderResponse> cancelOrder(
+                        @Parameter(description = "ID of the order to cancel", example = "1") @PathVariable Long orderId) {
+                CancelOrderResponse response = orderHandler.cancelOrder(orderId);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
         }
 }

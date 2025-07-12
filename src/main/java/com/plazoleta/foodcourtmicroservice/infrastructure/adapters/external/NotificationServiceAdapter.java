@@ -35,4 +35,24 @@ public class NotificationServiceAdapter implements NotificationServicePort {
             log.error("❌ Error sending SMS notification - Order: {}, Phone: {}, Error: {}", orderId, phoneNumber, e.getMessage());
         }
     }
+
+    @Override
+    public void sendOrderCancelledNotification(Long orderId, String phoneNumber) {
+        try {
+            String message = "Sorry, your order is already being prepared and cannot be cancelled";
+
+            SendSmsRequest request = new SendSmsRequest(phoneNumber, message, null, orderId);
+
+            ResponseEntity<NotificationResponse> response = messagingServiceClient.sendSmsNotification(request);
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("📱 Cancellation SMS sent successfully - Order: {}, Phone: {}", orderId, phoneNumber);
+            } else {
+                log.error("❌ Failed to send cancellation SMS - Order: {}, Phone: {}, Status: {}", orderId, phoneNumber, response.getStatusCode());
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Error sending cancellation SMS notification - Order: {}, Phone: {}, Error: {}", orderId, phoneNumber, e.getMessage());
+        }
+    }
 }

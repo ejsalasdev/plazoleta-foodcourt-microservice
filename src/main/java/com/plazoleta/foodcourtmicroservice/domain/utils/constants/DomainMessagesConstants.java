@@ -71,6 +71,9 @@ public final class DomainMessagesConstants {
     public static final String ORDER_NOT_READY = "Order is not in READY status. Only READY orders can be delivered.";
     public static final String INVALID_SECURITY_PIN = "Invalid security PIN. Please verify the PIN and try again.";
     public static final String ORDER_DELIVERED_SUCCESSFULLY = "Order delivered successfully.";
+    public static final String ORDER_NOT_PENDING_FOR_CANCELLATION = "Sorry, your order is already in preparation and cannot be cancelled.";
+    public static final String ORDER_CANCELLED_SUCCESSFULLY = "Order has been cancelled successfully.";
+    public static final String ORDER_NOT_FROM_CUSTOMER = "Order does not belong to the current customer.";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");

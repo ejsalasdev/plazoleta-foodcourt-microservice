@@ -8,6 +8,7 @@ public final class ApplicationMessagesConstants {
     public static final String ORDER_ASSIGNED_SUCCESSFULLY = "Order assigned successfully and status changed to IN_PREPARATION";
     public static final String ORDER_MARKED_AS_READY_SUCCESSFULLY = "Order marked as ready successfully and notification sent to customer.";
     public static final String ORDER_DELIVERED_SUCCESSFULLY = "Order delivered successfully.";
+    public static final String ORDER_CANCELLED_SUCCESSFULLY = "Order has been cancelled successfully and notification sent to customer.";
 
     private ApplicationMessagesConstants() {
         throw new IllegalStateException("Utility class");

@@ -16,16 +16,16 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 title = "🍴 Foodcourt Microservice API",
                 version = "v1.0.0",
                 description = """
-                        **Microservicio de gestión de restaurantes, menús y pedidos para la plataforma Plazoleta**
+                        **Restaurant, menu and order management microservice for the Plazoleta platform**
                         
-                        Este microservicio administra restaurantes, platos y el ciclo de vida de los pedidos.
-                        Implementa arquitectura hexagonal y DDD.
+                        This microservice manages restaurants, dishes and the order lifecycle.
+                        Implements hexagonal architecture and DDD.
                         
-                        ## Características principales:
-                        - ✅ Gestión de restaurantes y menús
-                        - ✅ Validaciones de negocio robustas
-                        - ✅ Arquitectura hexagonal + DDD
-                        - ✅ Integración con microservicios de usuarios y trazabilidad
+                        ## Key Features:
+                        - ✅ Restaurant and menu management
+                        - ✅ Robust business validations
+                        - ✅ Hexagonal architecture + DDD
+                        - ✅ Integration with user and traceability microservices
                         
                         """,
                 license = @License(
@@ -35,7 +35,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         ),
         servers = {
                 @Server(
-                        description = "Desarrollo Local",
+                        description = "Local Development",
                         url = "http://localhost:8092"
                 )
         },
