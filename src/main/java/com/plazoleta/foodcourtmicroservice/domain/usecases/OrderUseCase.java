@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import com.plazoleta.foodcourtmicroservice.application.client.dto.OrderTrackingRequest;
 import com.plazoleta.foodcourtmicroservice.domain.enums.OrderStatusEnum;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomOrderException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomerHasActiveOrderException;
@@ -16,10 +17,11 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.OrderServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.NotificationServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.OrderTrackingServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.SecurityPinGenerator;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
@@ -33,6 +35,7 @@ public class OrderUseCase implements OrderServicePort {
     private final AuthenticatedUserPort authenticatedUserPort;
     private final UserServicePort userServicePort;
     private final NotificationServicePort notificationServicePort;
+    private final OrderTrackingServicePort orderTrackingServicePort;
     private final PaginationValidatorChain paginationValidatorChain;
 
     public OrderUseCase(OrderPersistencePort orderPersistencePort,
@@ -41,6 +44,7 @@ public class OrderUseCase implements OrderServicePort {
             AuthenticatedUserPort authenticatedUserPort,
             UserServicePort userServicePort,
             NotificationServicePort notificationServicePort,
+            OrderTrackingServicePort orderTrackingServicePort,
             PaginationValidatorChain paginationValidatorChain) {
         this.orderPersistencePort = orderPersistencePort;
         this.restaurantPersistencePort = restaurantPersistencePort;
@@ -48,6 +52,7 @@ public class OrderUseCase implements OrderServicePort {
         this.authenticatedUserPort = authenticatedUserPort;
         this.userServicePort = userServicePort;
         this.notificationServicePort = notificationServicePort;
+        this.orderTrackingServicePort = orderTrackingServicePort;
         this.paginationValidatorChain = paginationValidatorChain;
     }
 
@@ -94,7 +99,11 @@ public class OrderUseCase implements OrderServicePort {
         orderModel.setRestaurant(restaurant.get());
         orderModel.setOrderDishes(validatedOrderDishes);
 
-        return orderPersistencePort.saveOrder(orderModel);
+        OrderModel savedOrder = orderPersistencePort.saveOrder(orderModel);
+
+        trackOrderStatusChange(savedOrder, null, OrderStatusEnum.PENDING, null);
+
+        return savedOrder;
     }
 
     @Override
@@ -147,10 +156,15 @@ public class OrderUseCase implements OrderServicePort {
             throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_PENDING);
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
         order.setEmployeeId(currentEmployeeId);
         order.setStatus(OrderStatusEnum.IN_PREPARATION);
 
-        return orderPersistencePort.updateOrder(order);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        trackOrderStatusChange(updatedOrder, previousStatus, OrderStatusEnum.IN_PREPARATION, currentEmployeeId);
+
+        return updatedOrder;
     }
 
     @Override
@@ -177,6 +191,7 @@ public class OrderUseCase implements OrderServicePort {
             throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_IN_PREPARATION);
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
         String securityPin = SecurityPinGenerator.generateSecurityPin();
         order.setSecurityPin(securityPin);
         order.setStatus(OrderStatusEnum.READY);
@@ -185,6 +200,8 @@ public class OrderUseCase implements OrderServicePort {
 
         String customerPhoneNumber = userServicePort.getUserPhoneNumber(order.getCustomerId());
         notificationServicePort.sendOrderReadyNotification(order.getId(), customerPhoneNumber, securityPin);
+
+        trackOrderStatusChange(updatedOrder, previousStatus, OrderStatusEnum.READY, currentEmployeeId);
 
         return updatedOrder;
     }
@@ -217,9 +234,14 @@ public class OrderUseCase implements OrderServicePort {
             throw new CustomOrderException(DomainMessagesConstants.INVALID_SECURITY_PIN);
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
         order.setStatus(OrderStatusEnum.DELIVERED);
 
-        return orderPersistencePort.updateOrder(order);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        trackOrderStatusChange(updatedOrder, previousStatus, OrderStatusEnum.DELIVERED, currentEmployeeId);
+
+        return updatedOrder;
     }
 
     @Override
@@ -243,7 +265,32 @@ public class OrderUseCase implements OrderServicePort {
             throw new CustomOrderException(DomainMessagesConstants.ORDER_NOT_PENDING_FOR_CANCELLATION);
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
         order.setStatus(OrderStatusEnum.CANCELLED);
-        return orderPersistencePort.updateOrder(order);
+
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        trackOrderStatusChange(updatedOrder, previousStatus, OrderStatusEnum.CANCELLED, null);
+
+        return updatedOrder;
+    }
+
+    
+    private void trackOrderStatusChange(OrderModel order, OrderStatusEnum previousStatus, OrderStatusEnum currentStatus,
+            Long employeeId) {
+
+        String customerEmail = userServicePort.getUserEmail(order.getCustomerId());
+        String employeeEmail = employeeId != null ? userServicePort.getUserEmail(employeeId) : null;
+
+        OrderTrackingRequest trackingRequest = new OrderTrackingRequest(
+                order.getId(),
+                order.getCustomerId(),
+                customerEmail,
+                previousStatus,
+                currentStatus,
+                employeeId,
+                employeeEmail);
+
+        orderTrackingServicePort.trackOrder(trackingRequest);
     }
 }

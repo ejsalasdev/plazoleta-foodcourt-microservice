@@ -1,4 +1,4 @@
-package com.plazoleta.foodcourtmicroservice.domain.ports.out;
+package com.plazoleta.foodcourtmicroservice.domain.ports.out.external;
 
 public interface UserServicePort {
     
@@ -7,4 +7,6 @@ public interface UserServicePort {
     Long getUserRestaurantId(Long userId);
     
     String getUserPhoneNumber(Long userId);
+    
+    String getUserEmail(Long userId);
 }

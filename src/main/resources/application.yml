@@ -35,3 +35,6 @@ user-microservice:
 
 messaging-microservice:
   url: http://localhost:8093
+
+tracking-microservice:
+  url: http://localhost:8094

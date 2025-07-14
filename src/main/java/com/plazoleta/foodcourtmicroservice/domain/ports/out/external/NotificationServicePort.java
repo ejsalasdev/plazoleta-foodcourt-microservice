@@ -1,4 +1,4 @@
-package com.plazoleta.foodcourtmicroservice.domain.ports.out;
+package com.plazoleta.foodcourtmicroservice.domain.ports.out.external;
 
 public interface NotificationServicePort {
     void sendOrderReadyNotification(Long orderId, String phoneNumber, String securityPin);

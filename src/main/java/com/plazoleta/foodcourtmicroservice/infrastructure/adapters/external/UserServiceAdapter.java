@@ -2,7 +2,7 @@ package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.external;
 
 import com.plazoleta.foodcourtmicroservice.application.client.dto.UserInfoResponse;
 import com.plazoleta.foodcourtmicroservice.application.client.handler.UserHandlerClient;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.UserNotFoundException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.utils.constants.InfrastructureMessagesConstants;
 
@@ -39,6 +39,17 @@ public class UserServiceAdapter implements UserServicePort {
         try {
             UserInfoResponse userInfo = userHandlerClient.getUserInfobyId(userId);
             return userInfo.phoneNumber();
+        } catch (FeignException.NotFound e) {
+            throw new UserNotFoundException(
+                    String.format(InfrastructureMessagesConstants.USER_NOT_FOUND, userId));
+        }
+    }
+
+    @Override
+    public String getUserEmail(Long userId) {
+        try {
+            UserInfoResponse userInfo = userHandlerClient.getUserInfobyId(userId);
+            return userInfo.email();
         } catch (FeignException.NotFound e) {
             throw new UserNotFoundException(
                     String.format(InfrastructureMessagesConstants.USER_NOT_FOUND, userId));

@@ -34,10 +34,11 @@ import com.plazoleta.foodcourtmicroservice.domain.model.OrderModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.NotificationServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.OrderTrackingServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
@@ -60,6 +61,9 @@ class OrderUseCaseTest {
 
     @Mock
     private NotificationServicePort notificationServicePort;
+
+    @Mock
+    private OrderTrackingServicePort orderTrackingServicePort;
 
     @Mock
     private PaginationValidatorChain paginationValidatorChain;
@@ -93,6 +97,7 @@ class OrderUseCaseTest {
         when(orderPersistencePort.hasActiveOrdersForCustomer(customerId)).thenReturn(false);
         when(restaurantPersistencePort.findRestaurantById(restaurant.getId())).thenReturn(Optional.of(restaurant));
         when(dishPersistencePort.findDishById(dish.getId())).thenReturn(Optional.of(dish));
+        when(userServicePort.getUserEmail(customerId)).thenReturn("customer@test.com");
 
         OrderModel savedOrder = buildSavedOrder(1L, customerId, restaurant, List.of(orderDishModel));
         when(orderPersistencePort.saveOrder(any(OrderModel.class))).thenReturn(savedOrder);
@@ -113,6 +118,8 @@ class OrderUseCaseTest {
         verify(restaurantPersistencePort, times(1)).findRestaurantById(restaurant.getId());
         verify(dishPersistencePort, times(1)).findDishById(dish.getId());
         verify(orderPersistencePort, times(1)).saveOrder(any(OrderModel.class));
+        verify(userServicePort, times(1)).getUserEmail(customerId);
+        verify(orderTrackingServicePort, times(1)).trackOrder(any());
     }
 
     @Test
@@ -240,6 +247,7 @@ class OrderUseCaseTest {
         when(restaurantPersistencePort.findRestaurantById(restaurant.getId())).thenReturn(Optional.of(restaurant));
         when(dishPersistencePort.findDishById(dish.getId())).thenReturn(Optional.of(dish));
         when(dishPersistencePort.findDishById(dish2.getId())).thenReturn(Optional.of(dish2));
+        when(userServicePort.getUserEmail(customerId)).thenReturn("customer@test.com");
 
         OrderModel savedOrder = buildSavedOrder(1L, customerId, restaurant, List.of(orderDishModel, orderDish2));
         when(orderPersistencePort.saveOrder(any(OrderModel.class))).thenReturn(savedOrder);
@@ -259,6 +267,8 @@ class OrderUseCaseTest {
         verify(dishPersistencePort, times(1)).findDishById(dish.getId());
         verify(dishPersistencePort, times(1)).findDishById(dish2.getId());
         verify(orderPersistencePort, times(1)).saveOrder(any(OrderModel.class));
+        verify(userServicePort, times(1)).getUserEmail(customerId);
+        verify(orderTrackingServicePort, times(1)).trackOrder(any());
     }
 
     @Test
@@ -478,8 +488,6 @@ class OrderUseCaseTest {
                 content, totalElements, totalPages, currentPage, pageSize, hasNext, hasPrevious);
     }
 
-    // Tests for assignOrderToEmployeeAndChangeStatus
-
     @Test
     void when_AssignOrderToEmployee_WithValidEmployeeAndPendingOrder_Expect_OrderAssignedAndStatusChanged() {
         // Arrange
@@ -492,7 +500,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
         pendingOrder.setEmployeeId(null);
@@ -504,6 +512,8 @@ class OrderUseCaseTest {
         when(authenticatedUserPort.getCurrentUserRoles()).thenReturn(roles);
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(employeeId);
         when(userServicePort.getUserRestaurantId(employeeId)).thenReturn(restaurantId);
+        when(userServicePort.getUserEmail(456L)).thenReturn("customer@test.com");
+        when(userServicePort.getUserEmail(employeeId)).thenReturn("employee@test.com");
         when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
         when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(assignedOrder);
 
@@ -518,8 +528,11 @@ class OrderUseCaseTest {
         verify(authenticatedUserPort).getCurrentUserRoles();
         verify(authenticatedUserPort).getCurrentUserId();
         verify(userServicePort).getUserRestaurantId(employeeId);
+        verify(userServicePort, times(1)).getUserEmail(456L);
+        verify(userServicePort, times(1)).getUserEmail(employeeId);
         verify(orderPersistencePort).findOrderById(orderId);
         verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+        verify(orderTrackingServicePort, times(1)).trackOrder(any());
     }
 
     @Test
@@ -606,7 +619,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -640,7 +653,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not PENDING
 
@@ -662,7 +675,6 @@ class OrderUseCaseTest {
         verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
-
     @Test
     void when_CancelOrder_WithValidPendingOrder_Expect_OrderCancelledSuccessfully() {
         // Arrange
@@ -673,7 +685,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -681,6 +693,7 @@ class OrderUseCaseTest {
         cancelledOrder.setStatus(OrderStatusEnum.CANCELLED);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
+        when(userServicePort.getUserEmail(customerId)).thenReturn("customer@test.com");
         when(orderPersistencePort.findOrderById(orderId)).thenReturn(Optional.of(pendingOrder));
         when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(cancelledOrder);
 
@@ -694,8 +707,10 @@ class OrderUseCaseTest {
         assertEquals(customerId, result.getCustomerId());
 
         verify(authenticatedUserPort).getCurrentUserId();
+        verify(userServicePort, times(1)).getUserEmail(customerId);
         verify(orderPersistencePort).findOrderById(orderId);
         verify(orderPersistencePort).updateOrder(any(OrderModel.class));
+        verify(orderTrackingServicePort, times(1)).trackOrder(any());
         verify(notificationServicePort, never()).sendOrderCancelledNotification(anyLong(), any(String.class));
     }
 
@@ -731,8 +746,9 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
-        OrderModel orderFromDifferentCustomer = buildSavedOrder(orderId, differentCustomerId, testRestaurant, List.of(orderDish));
+
+        OrderModel orderFromDifferentCustomer = buildSavedOrder(orderId, differentCustomerId, testRestaurant,
+                List.of(orderDish));
         orderFromDifferentCustomer.setStatus(OrderStatusEnum.PENDING);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
@@ -761,7 +777,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderInPreparation = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderInPreparation.setStatus(OrderStatusEnum.IN_PREPARATION);
 
@@ -793,7 +809,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderReady = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderReady.setStatus(OrderStatusEnum.READY);
 
@@ -825,7 +841,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderDelivered = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderDelivered.setStatus(OrderStatusEnum.DELIVERED);
 
