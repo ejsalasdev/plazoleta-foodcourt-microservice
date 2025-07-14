@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import com.plazoleta.foodcourtmicroservice.application.client.dto.NotificationResponse;
 import com.plazoleta.foodcourtmicroservice.application.client.dto.SendSmsRequest;
 import com.plazoleta.foodcourtmicroservice.application.client.handler.MessagingHandlerClient;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.NotificationServicePort;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

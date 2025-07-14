@@ -24,7 +24,6 @@ public interface OrderEntityMapper {
     @Mapping(target = "orderDishes", ignore = true)
     OrderEntity modelToEntity(OrderModel orderModel);
 
-    // Main mapping methods with manual orderDishes handling
     default OrderModel entityToModelWithDishes(OrderEntity orderEntity) {
         if (orderEntity == null) {
             return null;
@@ -65,7 +64,6 @@ public interface OrderEntityMapper {
         return orderEntity;
     }
 
-    // Helper methods for OrderDish mapping without circular references
     default OrderDishModel orderDishEntityToModel(OrderDishEntity orderDishEntity) {
         if (orderDishEntity == null) {
             return null;
@@ -75,9 +73,7 @@ public interface OrderEntityMapper {
         orderDishModel.setId(orderDishEntity.getId());
         orderDishModel.setQuantity(orderDishEntity.getQuantity());
         
-        // Map dish using the DishEntityMapper from 'uses' annotation
         if (orderDishEntity.getDish() != null) {
-            // This will use the DishEntityMapper automatically injected by MapStruct
             orderDishModel.setDish(mapDishEntityToModel(orderDishEntity.getDish()));
         }
         
@@ -93,16 +89,13 @@ public interface OrderEntityMapper {
         orderDishEntity.setId(orderDishModel.getId());
         orderDishEntity.setQuantity(orderDishModel.getQuantity());
         
-        // Map dish using the DishEntityMapper from 'uses' annotation
         if (orderDishModel.getDish() != null) {
-            // This will use the DishEntityMapper automatically injected by MapStruct
             orderDishEntity.setDish(mapDishModelToEntity(orderDishModel.getDish()));
         }
         
         return orderDishEntity;
     }
 
-    // These methods will be automatically implemented by MapStruct using the 'uses' mappers
     @Mapping(target = "restaurant", ignore = true)
     DishModel mapDishEntityToModel(DishEntity dishEntity);
     

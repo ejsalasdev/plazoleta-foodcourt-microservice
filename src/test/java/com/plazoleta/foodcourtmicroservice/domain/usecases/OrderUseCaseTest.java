@@ -34,10 +34,10 @@ import com.plazoleta.foodcourtmicroservice.domain.model.OrderModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.DishPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.NotificationServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.OrderPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.NotificationServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
 
@@ -478,8 +478,6 @@ class OrderUseCaseTest {
                 content, totalElements, totalPages, currentPage, pageSize, hasNext, hasPrevious);
     }
 
-    // Tests for assignOrderToEmployeeAndChangeStatus
-
     @Test
     void when_AssignOrderToEmployee_WithValidEmployeeAndPendingOrder_Expect_OrderAssignedAndStatusChanged() {
         // Arrange
@@ -492,7 +490,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
         pendingOrder.setEmployeeId(null);
@@ -606,7 +604,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, orderRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, 456L, orderRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -640,7 +638,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel inPreparationOrder = buildSavedOrder(orderId, 456L, testRestaurant, List.of(orderDish));
         inPreparationOrder.setStatus(OrderStatusEnum.IN_PREPARATION); // Not PENDING
 
@@ -662,7 +660,6 @@ class OrderUseCaseTest {
         verify(orderPersistencePort, never()).updateOrder(any(OrderModel.class));
     }
 
-
     @Test
     void when_CancelOrder_WithValidPendingOrder_Expect_OrderCancelledSuccessfully() {
         // Arrange
@@ -673,7 +670,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel pendingOrder = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         pendingOrder.setStatus(OrderStatusEnum.PENDING);
 
@@ -731,8 +728,9 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
-        OrderModel orderFromDifferentCustomer = buildSavedOrder(orderId, differentCustomerId, testRestaurant, List.of(orderDish));
+
+        OrderModel orderFromDifferentCustomer = buildSavedOrder(orderId, differentCustomerId, testRestaurant,
+                List.of(orderDish));
         orderFromDifferentCustomer.setStatus(OrderStatusEnum.PENDING);
 
         when(authenticatedUserPort.getCurrentUserId()).thenReturn(customerId);
@@ -761,7 +759,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderInPreparation = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderInPreparation.setStatus(OrderStatusEnum.IN_PREPARATION);
 
@@ -793,7 +791,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderReady = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderReady.setStatus(OrderStatusEnum.READY);
 
@@ -825,7 +823,7 @@ class OrderUseCaseTest {
         CategoryModel testCategory = buildCategory(1L);
         DishModel testDish = buildDish(1L, testRestaurant, testCategory);
         OrderDishModel orderDish = buildOrderDish(1L, testDish, 2);
-        
+
         OrderModel orderDelivered = buildSavedOrder(orderId, customerId, testRestaurant, List.of(orderDish));
         orderDelivered.setStatus(OrderStatusEnum.DELIVERED);
 
