@@ -14,6 +14,9 @@ import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementLengt
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidOwnerException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.RequiredFieldsException;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.UnauthorizedOperationException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomOrderException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.CustomerHasActiveOrderException;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.OrderDishValidationException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeAuthoritiesException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.ErrorDecodeIdException;
 import com.plazoleta.foodcourtmicroservice.infrastructure.exceptions.UserNotFoundException;
@@ -83,6 +86,26 @@ public class ControllerAdvisor {
         @ExceptionHandler(UserNotFoundException.class)
         public ResponseEntity<ExceptionResponse> handleUserNotFoundException(UserNotFoundException exception) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(CustomOrderException.class)
+        public ResponseEntity<ExceptionResponse> handleCustomOrderException(CustomOrderException exception) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(CustomerHasActiveOrderException.class)
+        public ResponseEntity<ExceptionResponse> handleCustomerHasActiveOrderException(
+                        CustomerHasActiveOrderException exception) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
+        }
+
+        @ExceptionHandler(OrderDishValidationException.class)
+        public ResponseEntity<ExceptionResponse> handleOrderDishValidationException(
+                        OrderDishValidationException exception) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                                 .body(new ExceptionResponse(exception.getMessage(), LocalDateTime.now()));
         }
 

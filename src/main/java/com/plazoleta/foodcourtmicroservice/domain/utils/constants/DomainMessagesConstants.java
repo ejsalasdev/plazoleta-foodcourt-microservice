@@ -15,6 +15,8 @@ public final class DomainMessagesConstants {
     public static final String RESTAURANT_NAME_REQUIRED = "Restaurant name is required.";
     public static final String RESTAURANT_NAME_NUMERIC = "Restaurant name cannot be only numbers.";
 
+    public static final String RESTAURANT_NOT_FOUND = "Restaurant with id %d does not exist.";
+
     public static final String NAME_ONLY_NUMBERS_REGEX = "\\d+";
     public static final String NIT_NUMERIC_REGEX = "\\d+";
     public static final String PHONE_REGEX = "^\\+?\\d+$";
@@ -39,6 +41,7 @@ public final class DomainMessagesConstants {
     public static final String DISH_PRICE_MUST_BE_INTEGER = "Dish price must be an integer.";
     public static final String DISH_CATEGORY_ID_REQUIRED = "Category ID is required.";
     public static final String DISH_RESTAURANT_ID_REQUIRED = "Restaurant ID is required.";
+    public static final String CATEGORY_NOT_FOUND = "Category with id %d does not exist.";
 
     public static final String DISH_ALREADY_EXISTS = "A dish with the same name '%s' already exists in this restaurant.";
     public static final String DISH_NOT_FOUND_IN_RESTAURANT = "Dish with id %d does not belong to restaurant with id %d or does not exist.";
@@ -48,6 +51,29 @@ public final class DomainMessagesConstants {
     public static final String PAGINATION_PAGE_NUMBER_INVALID = "Page number must be 0 or greater.";
     public static final String PAGINATION_PAGE_SIZE_INVALID = "Page size must be greater than 0.";
     public static final String PAGINATION_SORTBY_INVALID = "Invalid sortBy field: %s";
+
+    // Order messages
+    public static final String ORDER_CUSTOMER_HAS_ACTIVE_ORDER = "Customer already has an active order. Only one order can be in process at a time.";
+    public static final String ORDER_DISH_DIFFERENT_RESTAURANT = "All dishes in an order must belong to the same restaurant.";
+    public static final String ORDER_DISH_NOT_ACTIVE = "Cannot order inactive dishes.";
+    public static final String RESTAURANT_NOT_FOUND_MESSAGE = "Restaurant not found.";
+    public static final String DISH_NOT_FOUND_MESSAGE = "Dish not found.";
+    public static final String EMPLOYEE_NOT_AUTHORIZED = "User is not authorized to access this resource. Only employees can list orders.";
+    public static final String EMPLOYEE_NOT_ASSOCIATED_WITH_RESTAURANT = "Employee is not associated with any restaurant.";
+    public static final String EMPLOYEE_ROLE = "EMPLOYEE";
+    public static final String ORDER_NOT_FOUND = "Order not found.";
+    public static final String ORDER_NOT_PENDING = "Order is not in PENDING status. Only PENDING orders can be assigned to preparation.";
+    public static final String ORDER_NOT_FROM_EMPLOYEE_RESTAURANT = "Order does not belong to employee's restaurant.";
+    public static final String ORDER_ASSIGNED_SUCCESSFULLY = "Order assigned successfully and status changed to IN_PREPARATION.";
+    public static final String ORDER_NOT_IN_PREPARATION = "Order is not in IN_PREPARATION status. Only orders in preparation can be marked as ready.";
+    public static final String ORDER_MARKED_AS_READY_SUCCESSFULLY = "Order marked as ready successfully and notification sent to customer.";
+    public static final String SECURITY_PIN_GENERATED = "Security PIN generated for order pickup.";
+    public static final String ORDER_NOT_READY = "Order is not in READY status. Only READY orders can be delivered.";
+    public static final String INVALID_SECURITY_PIN = "Invalid security PIN. Please verify the PIN and try again.";
+    public static final String ORDER_DELIVERED_SUCCESSFULLY = "Order delivered successfully.";
+    public static final String ORDER_NOT_PENDING_FOR_CANCELLATION = "Sorry, your order is already in preparation and cannot be cancelled.";
+    public static final String ORDER_CANCELLED_SUCCESSFULLY = "Order has been cancelled successfully.";
+    public static final String ORDER_NOT_FROM_CUSTOMER = "Order does not belong to the current customer.";
 
     private DomainMessagesConstants() {
         throw new IllegalStateException("Utility class");

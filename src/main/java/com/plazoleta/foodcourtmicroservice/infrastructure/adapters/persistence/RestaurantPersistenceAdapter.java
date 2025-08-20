@@ -1,12 +1,14 @@
 package com.plazoleta.foodcourtmicroservice.infrastructure.adapters.persistence;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.ElementNotFoundException;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
@@ -33,6 +35,17 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
     }
 
     @Override
+    public boolean existsById(Long id) {
+        return restaurantRepository.existsById(id);
+    }
+
+    @Override
+    public Optional<RestaurantModel> findRestaurantById(Long id) {
+        return restaurantRepository.findById(id)
+                .map(restaurantEntityMapper::entityToModel);
+    }
+
+    @Override
     public PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc) {
         Sort sort  = Sort.by(sortBy);
         if (!orderAsc) {
@@ -56,5 +69,17 @@ public class RestaurantPersistenceAdapter implements RestaurantPersistencePort {
                 restaurantEntityPage.hasPrevious()
         );
     }
+    
+    @Override
+    public Optional<RestaurantModel> findRestaurantByOwnerId(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId)
+                .map(restaurantEntityMapper::entityToModel);
+    }
 
+    @Override
+    public RestaurantModel findByOwnerId(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId)
+                .map(restaurantEntityMapper::entityToModel)
+                .orElseThrow(() -> new ElementNotFoundException("Restaurant not found for owner ID: " + ownerId));
+    }
 }

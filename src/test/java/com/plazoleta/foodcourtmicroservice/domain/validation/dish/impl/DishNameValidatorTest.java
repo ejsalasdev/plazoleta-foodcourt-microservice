@@ -1,17 +1,17 @@
 package com.plazoleta.foodcourtmicroservice.domain.validation.dish.impl;
 
-import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-
-import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
-import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
+import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
+import com.plazoleta.foodcourtmicroservice.domain.model.CategoryModel;
+import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
+import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 
 class DishNameValidatorTest {
     private final DishNameValidator validator = new DishNameValidator();
@@ -21,8 +21,13 @@ class DishNameValidatorTest {
                 "https://logo.com/logo.jpg", 1L);
     }
 
+    private CategoryModel buildCategory(Long id) {
+        return new CategoryModel(id, "cat", "desc");
+    }
+
     void when_validName_then_noException() {
-        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
+        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "url", buildCategory(2L),
+                buildRestaurant(10L),
                 true);
         assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }
@@ -30,14 +35,15 @@ class DishNameValidatorTest {
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.ValueSource(strings = { "   " })
     void when_invalidName_then_throwInvalidElementFormatException(String invalidName) {
-        DishModel model = new DishModel(1L, invalidName, new BigDecimal("10000"), "desc", "url", 2L,
+        DishModel model = new DishModel(1L, invalidName, new BigDecimal("10000"), "desc", "url", buildCategory(2L),
                 buildRestaurant(10L), true);
         assertThrows(InvalidElementFormatException.class, () -> validator.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_nullName_then_noException() {
-        DishModel model = new DishModel(1L, null, new BigDecimal("10000"), "desc", "url", 2L, buildRestaurant(10L),
+        DishModel model = new DishModel(1L, null, new BigDecimal("10000"), "desc", "url", buildCategory(2L),
+                buildRestaurant(10L),
                 true);
         assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }

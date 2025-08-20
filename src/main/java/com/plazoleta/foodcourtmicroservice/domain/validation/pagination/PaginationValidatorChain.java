@@ -23,4 +23,9 @@ public class PaginationValidatorChain {
     public void validate(Integer page, Integer size, String sortBy, boolean orderAsc) {
         chain.validate(page, size, sortBy, orderAsc);
     }
+
+    public void validate(Integer page, Integer size) {
+        // Use default values for sortBy and orderAsc when not needed
+        chain.validate(page, size, "id", true);
+    }
 }

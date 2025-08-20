@@ -1,9 +1,9 @@
-
 package com.plazoleta.foodcourtmicroservice.infrastructure.controllers.rest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,5 +60,16 @@ public class RestaurantController {
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "true") boolean orderAsc) {
         return ResponseEntity.ok(restaurantHandler.findAll(page, size, sortBy, orderAsc));
+    }
+
+    @Operation(summary = "Get restaurant by owner ID", description = "Returns the restaurant information for a given owner ID. Used by user-microservice to associate employees with restaurants.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Restaurant found successfully", content = @Content(schema = @Schema(implementation = RestaurantResponse.class))),
+        @ApiResponse(responseCode = "404", description = "Restaurant not found for the given owner ID", content = @Content(schema = @Schema(implementation = ExceptionResponse.class))),
+        @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ExceptionResponse.class)))
+    })
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<RestaurantResponse> getRestaurantByOwnerId(@PathVariable Long ownerId) {
+        return ResponseEntity.ok(restaurantHandler.getRestaurantByOwnerId(ownerId));
     }
 }

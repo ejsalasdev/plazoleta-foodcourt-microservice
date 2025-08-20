@@ -48,4 +48,10 @@ public class RestaurantHandlerImpl implements RestaurantHandler {
                 restaurantPageInfo.isHasPrevious()
         );
     }
+
+    @Override
+    public RestaurantResponse getRestaurantByOwnerId(Long ownerId) {
+        RestaurantModel restaurantModel = restaurantServicePort.findByOwnerId(ownerId);
+        return restaurantResponseMapper.modelToResponse(restaurantModel);
+    }
 }

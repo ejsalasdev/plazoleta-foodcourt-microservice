@@ -8,7 +8,7 @@ import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
 import com.plazoleta.foodcourtmicroservice.domain.ports.in.RestaurantServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.AuthenticatedUserPort;
 import com.plazoleta.foodcourtmicroservice.domain.ports.out.RestaurantPersistencePort;
-import com.plazoleta.foodcourtmicroservice.domain.ports.out.UserServicePort;
+import com.plazoleta.foodcourtmicroservice.domain.ports.out.external.UserServicePort;
 import com.plazoleta.foodcourtmicroservice.domain.utils.constants.DomainMessagesConstants;
 import com.plazoleta.foodcourtmicroservice.domain.utils.pagination.PageInfo;
 import com.plazoleta.foodcourtmicroservice.domain.validation.pagination.PaginationValidatorChain;
@@ -64,6 +64,11 @@ public class RestaurantUseCase implements RestaurantServicePort {
     public PageInfo<RestaurantModel> findAll(Integer page, Integer size, String sortBy, boolean orderAsc) {
         paginationValidatorChain.validate(page, size, sortBy, orderAsc);
         return restaurantPersistencePort.findAll(page, size, sortBy, orderAsc);
+    }
+
+    @Override
+    public RestaurantModel findByOwnerId(Long ownerId) {
+        return restaurantPersistencePort.findByOwnerId(ownerId);
     }
 
 }

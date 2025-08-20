@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 import com.plazoleta.foodcourtmicroservice.domain.exceptions.InvalidElementFormatException;
+import com.plazoleta.foodcourtmicroservice.domain.model.CategoryModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.DishModel;
 import com.plazoleta.foodcourtmicroservice.domain.model.RestaurantModel;
-
-import com.plazoleta.foodcourtmicroservice.domain.enums.OperationType;
 
 class DishImageUrlValidatorTest {
 
@@ -24,17 +24,21 @@ class DishImageUrlValidatorTest {
                 "https://logo.com/logo.jpg", 1L);
     }
 
+    private CategoryModel buildCategory(Long id) {
+        return new CategoryModel(id, "cat", "desc");
+    }
+
     @ValueSource(strings = { "https://img.com/pizza.jpg" })
     @NullAndEmptySource
     void when_validOrEmptyOrNullImageUrl_then_noException(String imageUrl) {
-        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", imageUrl, 2L,
+        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", imageUrl, buildCategory(2L),
                 buildRestaurant(10L), true);
         assertDoesNotThrow(() -> validator.validate(model, OperationType.CREATE));
     }
 
     @Test
     void when_invalidImageUrl_then_throwInvalidElementFormatException() {
-        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "notaurl", 2L,
+        DishModel model = new DishModel(1L, "Pizza", new BigDecimal("10000"), "desc", "notaurl", buildCategory(2L),
                 buildRestaurant(10L), true);
         assertThrows(InvalidElementFormatException.class, () -> validator.validate(model, OperationType.CREATE));
     }
